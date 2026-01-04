@@ -89,7 +89,7 @@ export function DashboardContent() {
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         {/* Left Sidebar */}
-        <div className="xl:col-span-4 space-y-6">
+        <div className="xl:col-span-4 space-y-4 sm:space-y-6">
           {/* ATS Score Card */}
           <Card className="relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10" />

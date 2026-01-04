@@ -463,14 +463,14 @@ Requirements
                 isLoading={isLoadingListings}
               />
 
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 overflow-hidden">
                 <DndContext
                   sensors={sensors}
                   collisionDetection={closestCorners}
                   onDragStart={handleDragStart}
                   onDragEnd={handleDragEnd}
                 >
-                  <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4">
+                  <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 -mx-4 px-4">
                     {(Object.keys(statusConfig) as JobStatus[]).map((status) => (
                       <Column
                         key={status}

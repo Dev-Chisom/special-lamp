@@ -176,7 +176,7 @@ export function ResumeManagerInterface() {
   })
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="container mx-auto px-4 py-4 sm:py-6 md:py-8 max-w-7xl">
       <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-4xl font-bold mb-2">Resume Manager</h1>

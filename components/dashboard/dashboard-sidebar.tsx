@@ -16,6 +16,7 @@ import {
   Target,
   ChevronLeft,
   ChevronRight,
+  Settings,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -28,6 +29,7 @@ const navItems = [
   { name: "Resume Manager", href: "/dashboard/resume-manager", icon: FolderOpen },
   { name: "Scan History", href: "/dashboard/scan-history", icon: History },
   { name: "Chrome Extension", href: "/dashboard/extension", icon: Chrome },
+  { name: "Settings", href: "/dashboard/settings/auto-apply", icon: Settings },
 ]
 
 export function DashboardSidebar() {

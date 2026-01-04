@@ -239,7 +239,7 @@ export function ResumeBuilderWizard({ resumeId, onComplete }: ResumeBuilderWizar
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto px-4 py-4 sm:py-6 md:py-8 max-w-7xl">
         <Skeleton className="h-10 w-64 mb-8" />
         <Skeleton className="h-96 w-full" />
       </div>
@@ -247,7 +247,7 @@ export function ResumeBuilderWizard({ resumeId, onComplete }: ResumeBuilderWizar
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="container mx-auto px-4 py-4 sm:py-6 md:py-8 max-w-7xl">
       <WizardProgress currentStep={currentStep} />
 
       {/* Step Content */}

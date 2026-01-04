@@ -161,7 +161,7 @@ export function ScanInterface() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
       {/* Header */}
       <div className="border-b border-border/50 backdrop-blur-xl bg-background/80">
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-4 py-4 sm:py-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
               <Scan className="h-5 w-5 text-white" />
@@ -174,7 +174,7 @@ export function ScanInterface() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 sm:py-6 md:py-8">
         {scanState === "idle" && (
           <div className="max-w-4xl mx-auto space-y-6">
             <Card>

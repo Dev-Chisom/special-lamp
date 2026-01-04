@@ -84,30 +84,30 @@ export function EmptyState({ onJobListingsUpdate }: EmptyStateProps) {
   }
 
   return (
-    <div className="flex-1 flex items-center justify-center py-8 md:py-12 px-4 overflow-y-auto">
-      <Empty className="max-w-4xl w-full">
+    <div className="flex-1 flex items-center justify-center py-4 sm:py-8 md:py-12 px-4 sm:px-6 overflow-y-auto">
+      <Empty className="w-full max-w-none sm:max-w-4xl">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <Briefcase className="h-8 w-8" />
           </EmptyMedia>
-          <EmptyTitle>Start tracking your job applications</EmptyTitle>
-          <EmptyDescription>
+          <EmptyTitle className="text-xl sm:text-2xl">Start tracking your job applications</EmptyTitle>
+          <EmptyDescription className="text-sm sm:text-base">
             Get personalized job recommendations by uploading your resume or
             scanning your LinkedIn profile. Our AI will match you with jobs based
             on your skills and experience.
           </EmptyDescription>
         </EmptyHeader>
-        <EmptyContent className="w-full">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full mt-6">
-            <Card className="p-6 hover:shadow-md transition-shadow">
+        <EmptyContent className="w-full max-w-none">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full mt-4 sm:mt-6">
+            <Card className="p-4 sm:p-6 hover:shadow-md transition-shadow">
               <CardContent className="p-0">
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-primary/10 rounded-lg">
-                    <Upload className="h-6 w-6 text-primary" />
+                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+                  <div className="p-2 sm:p-3 bg-primary/10 rounded-lg shrink-0">
+                    <Upload className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold mb-1">Upload Your Resume</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold mb-1 text-sm sm:text-base">Upload Your Resume</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
                       Let PathForge AI match you with jobs using your resume and
                       experiences, not just job titles or keywords.
                     </p>
@@ -122,18 +122,19 @@ export function EmptyState({ onJobListingsUpdate }: EmptyStateProps) {
                     />
                     <Button
                       variant="outline"
-                      className="w-full"
+                      className="w-full text-xs sm:text-sm"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading}
+                      size="sm"
                     >
                       {isUploading ? (
                         <>
-                          <FileText className="h-4 w-4 mr-2 animate-spin" />
+                          <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-spin" />
                           Uploading...
                         </>
                       ) : (
                         <>
-                          <Upload className="h-4 w-4 mr-2" />
+                          <Upload className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                           Upload Resume
                         </>
                       )}
@@ -143,21 +144,21 @@ export function EmptyState({ onJobListingsUpdate }: EmptyStateProps) {
               </CardContent>
             </Card>
 
-            <Card className="p-6 hover:shadow-md transition-shadow cursor-pointer">
+            <Card className="p-4 sm:p-6 hover:shadow-md transition-shadow cursor-pointer">
               <CardContent className="p-0">
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-blue-500/10 rounded-lg">
-                    <Linkedin className="h-6 w-6 text-blue-500" />
+                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+                  <div className="p-2 sm:p-3 bg-blue-500/10 rounded-lg shrink-0">
+                    <Linkedin className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold mb-1">Scan LinkedIn Profile</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold mb-1 text-sm sm:text-base">Scan LinkedIn Profile</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
                       Import your LinkedIn profile to get personalized job
                       recommendations based on your experience.
                     </p>
-                    <Link href="/dashboard/linkedin-scan">
-                      <Button variant="outline" className="w-full">
-                        <Linkedin className="h-4 w-4 mr-2" />
+                    <Link href="/dashboard/linkedin-scan" className="block">
+                      <Button variant="outline" className="w-full text-xs sm:text-sm" size="sm">
+                        <Linkedin className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                         Scan LinkedIn
                       </Button>
                     </Link>
@@ -166,21 +167,21 @@ export function EmptyState({ onJobListingsUpdate }: EmptyStateProps) {
               </CardContent>
             </Card>
 
-            <Card className="p-6 hover:shadow-md transition-shadow cursor-pointer">
+            <Card className="p-4 sm:p-6 hover:shadow-md transition-shadow cursor-pointer md:col-span-2 lg:col-span-1">
               <CardContent className="p-0">
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-emerald-500/10 rounded-lg">
-                    <Search className="h-6 w-6 text-emerald-500" />
+                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+                  <div className="p-2 sm:p-3 bg-emerald-500/10 rounded-lg shrink-0">
+                    <Search className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-500" />
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold mb-1">Browse Jobs</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold mb-1 text-sm sm:text-base">Browse Jobs</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
                       Explore thousands of job opportunities and save the ones
                       that interest you.
                     </p>
-                    <Link href="/dashboard/find-jobs">
-                      <Button variant="outline" className="w-full">
-                        <Search className="h-4 w-4 mr-2" />
+                    <Link href="/dashboard/find-jobs" className="block">
+                      <Button variant="outline" className="w-full text-xs sm:text-sm" size="sm">
+                        <Search className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                         Find Jobs
                       </Button>
                     </Link>

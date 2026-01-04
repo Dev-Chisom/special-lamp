@@ -71,7 +71,7 @@ export function ScanHistoryInterface() {
   const declining = statistics.declining_count
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="container mx-auto px-4 py-4 sm:py-6 md:py-8 max-w-7xl">
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
           <History className="h-10 w-10" />

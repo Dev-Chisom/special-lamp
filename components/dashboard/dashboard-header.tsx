@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -43,29 +44,29 @@ export function DashboardHeader() {
   const initials = user?.full_name ? getInitials(user.full_name) : (user?.email?.substring(0, 2).toUpperCase() || "U")
 
   return (
-    <header className="border-b border-border/50 backdrop-blur-xl bg-background/80 px-6 py-4">
+    <header className="border-b border-border/50 backdrop-blur-xl bg-background/80 px-4 sm:px-6 py-3 sm:py-4">
       <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold">Welcome back, {displayName}</h1>
-          <p className="text-sm text-muted-foreground">Let's find your dream job today</p>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate">Welcome back, {displayName}</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Let's find your dream job today</p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon">
-            <Bell className="h-5 w-5" />
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10">
+            <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
 
-          <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-            <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+          <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="h-8 w-8 sm:h-10 sm:w-10">
+            <Sun className="h-4 w-4 sm:h-5 sm:w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-4 w-4 sm:h-5 sm:w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="gap-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback>{initials}</AvatarFallback>
+              <Button variant="ghost" className="gap-2 h-8 sm:h-10">
+                <Avatar className="h-7 w-7 sm:h-8 sm:w-8">
+                  <AvatarFallback className="text-xs sm:text-sm">{initials}</AvatarFallback>
                 </Avatar>
                 <span className="hidden lg:inline">{displayName}</span>
               </Button>
@@ -82,9 +83,11 @@ export function DashboardHeader() {
                 <User className="mr-2 h-4 w-4" />
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/settings/auto-apply">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Auto-Apply Settings
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut}>

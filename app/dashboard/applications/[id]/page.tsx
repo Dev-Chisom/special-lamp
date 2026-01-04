@@ -80,7 +80,7 @@ export default function ApplicationRunPage() {
 
   if (isLoading && !application) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-4 sm:py-6 md:py-8 max-w-4xl">
         <div className="mb-6">
           <Skeleton className="h-10 w-32 mb-4" />
         </div>
@@ -98,7 +98,7 @@ export default function ApplicationRunPage() {
 
   if (error && !application) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-4 sm:py-6 md:py-8 max-w-4xl">
         <Button
           variant="ghost"
           onClick={() => router.back()}
@@ -150,7 +150,7 @@ export default function ApplicationRunPage() {
     : 0
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-4 sm:py-6 md:py-8 max-w-4xl">
       <Button
         variant="ghost"
         onClick={() => router.back()}
@@ -162,9 +162,9 @@ export default function ApplicationRunPage() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Application Progress</CardTitle>
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <CardTitle className="text-lg sm:text-xl">Application Progress</CardTitle>
+            <div className="flex items-center gap-2 flex-wrap">
               <Badge className={getStatusBadgeColor(application.status)}>
                 {getStatusText(application.status)}
               </Badge>
