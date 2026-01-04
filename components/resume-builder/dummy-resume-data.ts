@@ -1,0 +1,48 @@
+/**
+ * Dummy resume data for template previews
+ */
+import type { ResumeData } from './resume-data-utils'
+
+export const DUMMY_RESUME_DATA: ResumeData = {
+  personalInfo: {
+    firstName: "John",
+    lastName: "Doe",
+    email: "john.doe@example.com",
+    phone: "(555) 123-4567",
+    location: "San Francisco, CA",
+    linkedin: "linkedin.com/in/johndoe",
+  },
+  summary: "Experienced software engineer with 5+ years of expertise in full-stack development, specializing in React, TypeScript, and Node.js. Proven track record of leading cross-functional teams and delivering scalable web applications serving 100K+ daily active users.",
+  experience: [
+    {
+      id: "1",
+      jobTitle: "Senior Software Engineer",
+      company: "Tech Corp Inc.",
+      startDate: "2020-01",
+      endDate: "",
+      isCurrent: true,
+      description: "• Led development of scalable web applications using React and Node.js\n• Architected microservices serving 100K+ daily active users\n• Mentored team of 5 engineers and improved code quality by 40%",
+    },
+    {
+      id: "2",
+      jobTitle: "Software Engineer",
+      company: "StartupXYZ",
+      startDate: "2018-06",
+      endDate: "2019-12",
+      isCurrent: false,
+      description: "• Developed and maintained frontend applications using React and Redux\n• Collaborated with design team to implement responsive UI components\n• Reduced page load time by 30% through optimization",
+    },
+  ],
+  education: [
+    {
+      id: "1",
+      school: "University of California, Berkeley",
+      degree: "Bachelor of Science in Computer Science",
+      startYear: "2014",
+      endYear: "2018",
+      isCurrent: false,
+    },
+  ],
+  skills: ["React", "TypeScript", "Node.js", "Python", "AWS", "Docker", "Kubernetes", "PostgreSQL"],
+}
+
