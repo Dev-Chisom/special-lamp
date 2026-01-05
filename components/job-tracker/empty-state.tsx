@@ -84,114 +84,115 @@ export function EmptyState({ onJobListingsUpdate }: EmptyStateProps) {
   }
 
   return (
-    <div className="flex-1 flex items-center justify-center py-4 sm:py-8 md:py-12 px-4 sm:px-6 overflow-y-auto">
-      <Empty className="w-full max-w-none sm:max-w-4xl">
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <Briefcase className="h-8 w-8" />
-          </EmptyMedia>
-          <EmptyTitle className="text-xl sm:text-2xl">Start tracking your job applications</EmptyTitle>
-          <EmptyDescription className="text-sm sm:text-base">
-            Get personalized job recommendations by uploading your resume or
-            scanning your LinkedIn profile. Our AI will match you with jobs based
-            on your skills and experience.
-          </EmptyDescription>
-        </EmptyHeader>
-        <EmptyContent className="w-full max-w-none">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full mt-4 sm:mt-6">
-            <Card className="p-4 sm:p-6 hover:shadow-md transition-shadow">
-              <CardContent className="p-0">
-                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
-                  <div className="p-2 sm:p-3 bg-primary/10 rounded-lg shrink-0">
-                    <Upload className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold mb-1 text-sm sm:text-base">Upload Your Resume</h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
-                      Let PathForge AI match you with jobs using your resume and
-                      experiences, not just job titles or keywords.
-                    </p>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".pdf,.doc,.docx"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                      id="resume-upload"
-                      disabled={isUploading}
-                    />
-                    <Button
-                      variant="outline"
-                      className="w-full text-xs sm:text-sm"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isUploading}
-                      size="sm"
-                    >
-                      {isUploading ? (
-                        <>
-                          <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-spin" />
-                          Uploading...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                          Upload Resume
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="p-4 sm:p-6 hover:shadow-md transition-shadow cursor-pointer">
-              <CardContent className="p-0">
-                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
-                  <div className="p-2 sm:p-3 bg-blue-500/10 rounded-lg shrink-0">
-                    <Linkedin className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold mb-1 text-sm sm:text-base">Scan LinkedIn Profile</h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
-                      Import your LinkedIn profile to get personalized job
-                      recommendations based on your experience.
-                    </p>
-                    <Link href="/dashboard/linkedin-scan" className="block">
-                      <Button variant="outline" className="w-full text-xs sm:text-sm" size="sm">
-                        <Linkedin className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                        Scan LinkedIn
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="p-4 sm:p-6 hover:shadow-md transition-shadow cursor-pointer md:col-span-2 lg:col-span-1">
-              <CardContent className="p-0">
-                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
-                  <div className="p-2 sm:p-3 bg-emerald-500/10 rounded-lg shrink-0">
-                    <Search className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold mb-1 text-sm sm:text-base">Browse Jobs</h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
-                      Explore thousands of job opportunities and save the ones
-                      that interest you.
-                    </p>
-                    <Link href="/dashboard/find-jobs" className="block">
-                      <Button variant="outline" className="w-full text-xs sm:text-sm" size="sm">
-                        <Search className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                        Find Jobs
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+    <div className="flex-1 flex items-center justify-center py-6 sm:py-8 md:py-10 px-4 sm:px-6 overflow-y-auto">
+      <div className="w-full max-w-4xl mx-auto">
+        {/* Header Section */}
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 mb-4">
+            <Briefcase className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
           </div>
-        </EmptyContent>
-      </Empty>
+          <h2 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3">
+            Start Tracking Your Job Applications
+          </h2>
+          <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto">
+            Get personalized job recommendations by uploading your resume or scanning your LinkedIn profile. 
+            Our AI will match you with jobs based on your skills and experience.
+          </p>
+        </div>
+
+        {/* Action Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Upload Resume Card */}
+          <Card className="group relative overflow-hidden border hover:border-primary/50 transition-all duration-300 hover:shadow-md">
+            <CardContent className="p-5 sm:p-6">
+              <div className="flex flex-col items-center text-center space-y-3">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                  <Upload className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-base sm:text-lg font-semibold">Upload Your Resume</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Let PathForge AI match you with jobs using your resume and experiences, not just job titles or keywords.
+                  </p>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  id="resume-upload"
+                  disabled={isUploading}
+                />
+                <Button
+                  className="w-full mt-1"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  size="default"
+                >
+                  {isUploading ? (
+                    <>
+                      <FileText className="h-4 w-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Resume
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Scan LinkedIn Card */}
+          <Card className="group relative overflow-hidden border hover:border-blue-500/50 transition-all duration-300 hover:shadow-md">
+            <CardContent className="p-5 sm:p-6">
+              <div className="flex flex-col items-center text-center space-y-3">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-gradient-to-br from-blue-500/20 to-blue-500/5 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                  <Linkedin className="h-6 w-6 sm:h-7 sm:w-7 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-base sm:text-lg font-semibold">Scan LinkedIn Profile</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Import your LinkedIn profile to get personalized job recommendations based on your experience.
+                  </p>
+                </div>
+                <Link href="/dashboard/linkedin-scan" className="w-full">
+                  <Button variant="outline" className="w-full mt-1" size="default">
+                    <Linkedin className="h-4 w-4 mr-2" />
+                    Scan LinkedIn
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Browse Jobs Card */}
+          <Card className="group relative overflow-hidden border hover:border-emerald-500/50 transition-all duration-300 hover:shadow-md sm:col-span-2 lg:col-span-1">
+            <CardContent className="p-5 sm:p-6">
+              <div className="flex flex-col items-center text-center space-y-3">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                  <Search className="h-6 w-6 sm:h-7 sm:w-7 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-base sm:text-lg font-semibold">Browse Jobs</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Explore thousands of job opportunities and save the ones that interest you.
+                  </p>
+                </div>
+                <Link href="/dashboard/find-jobs" className="w-full">
+                  <Button variant="outline" className="w-full mt-1" size="default">
+                    <Search className="h-4 w-4 mr-2" />
+                    Find Jobs
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }
