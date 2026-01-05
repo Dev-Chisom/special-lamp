@@ -15,6 +15,7 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   isInitialized: boolean;
+  lastFetchTime: number | null; // Timestamp of last successful /auth/me call
   
   // Actions
   setUser: (user: User | null) => void;
@@ -23,9 +24,12 @@ interface AuthState {
   signIn: (credentials: SignInRequest) => Promise<void>;
   signUp: (data: SignUpRequest) => Promise<void>;
   signOut: () => Promise<void>;
-  fetchCurrentUser: () => Promise<void>;
+  fetchCurrentUser: (force?: boolean) => Promise<void>;
   initializeAuth: () => Promise<void>;
 }
+
+// Request deduplication: prevent multiple simultaneous /auth/me calls
+let pendingFetchUserPromise: Promise<void> | null = null;
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -35,6 +39,7 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       error: null,
       isInitialized: false,
+      lastFetchTime: null,
 
       setUser: (user) => {
         set({
@@ -61,6 +66,7 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             isLoading: false,
             error: null,
+            lastFetchTime: Date.now(),
           });
         } catch (error: any) {
           set({
@@ -82,6 +88,7 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             isLoading: false,
             error: null,
+            lastFetchTime: Date.now(),
           });
         } catch (error: any) {
           set({
@@ -96,42 +103,71 @@ export const useAuthStore = create<AuthState>()(
 
       signOut: async () => {
         try {
+          // Clear pending fetch if any
+          pendingFetchUserPromise = null;
           authService.signOut();
           set({
             user: null,
             isAuthenticated: false,
             error: null,
             isInitialized: false, // Reset initialization flag on sign out
+            lastFetchTime: null,
           });
         } catch (error: any) {
           set({ error: error.message || 'Sign out failed' });
         }
       },
 
-      fetchCurrentUser: async () => {
-        console.log('[AuthStore] fetchCurrentUser: Starting...');
-        try {
-          set({ isLoading: true, error: null });
-          const user = await authService.getCurrentUser();
-          console.log('[AuthStore] fetchCurrentUser: Success', { user: user?.email });
-          set({
-            user,
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-          });
-        } catch (error: any) {
-          console.error('[AuthStore] fetchCurrentUser: Failed', { error: error.message });
-          // If fetching user fails, user is not authenticated
-          set({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-            error: null, // Don't show error on failed fetch, just clear auth state
-          });
-          // Clear tokens if they exist
-          authService.signOut();
+      fetchCurrentUser: async (force = false) => {
+        // If there's already a pending request, wait for it instead of making a new one
+        if (pendingFetchUserPromise && !force) {
+          return pendingFetchUserPromise;
         }
+
+        // Check if we have recent user data (within last 5 minutes) and don't force refresh
+        const state = get();
+        const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+        if (!force && state.user && state.lastFetchTime && state.lastFetchTime > fiveMinutesAgo) {
+          console.log('[AuthStore] fetchCurrentUser: Using cached user data');
+          return;
+        }
+
+        console.log('[AuthStore] fetchCurrentUser: Starting...');
+        
+        // Create the fetch promise and store it for deduplication
+        const fetchPromise = (async () => {
+          try {
+            set({ isLoading: true, error: null });
+            const user = await authService.getCurrentUser();
+            console.log('[AuthStore] fetchCurrentUser: Success', { user: user?.email });
+            set({
+              user,
+              isAuthenticated: true,
+              isLoading: false,
+              error: null,
+              lastFetchTime: Date.now(),
+            });
+          } catch (error: any) {
+            console.error('[AuthStore] fetchCurrentUser: Failed', { error: error.message });
+            // If fetching user fails, user is not authenticated
+            set({
+              user: null,
+              isAuthenticated: false,
+              isLoading: false,
+              error: null, // Don't show error on failed fetch, just clear auth state
+              lastFetchTime: null,
+            });
+            // Clear tokens if they exist
+            authService.signOut();
+            throw error; // Re-throw to let callers handle it
+          } finally {
+            // Clear the pending promise when done
+            pendingFetchUserPromise = null;
+          }
+        })();
+
+        pendingFetchUserPromise = fetchPromise;
+        return fetchPromise;
       },
 
       initializeAuth: async () => {
@@ -188,10 +224,21 @@ export const useAuthStore = create<AuthState>()(
 
         // Try to fetch current user to verify tokens are valid
         // The API client will automatically refresh the access token if it's expired (401)
-        try {
-          await get().fetchCurrentUser();
+        // If we have persisted user data, we can use it immediately and fetch in background
+        const currentState = get();
+        if (currentState.user) {
+          // We have persisted user data, mark as initialized immediately
           set({ isInitialized: true, isLoading: false });
-        } catch (error: any) {
+          // Fetch user in background to update if needed (non-blocking)
+          get().fetchCurrentUser().catch(() => {
+            // Silently fail background fetch, user is already authenticated
+          });
+        } else {
+          // No user data, must fetch to verify tokens
+          try {
+            await get().fetchCurrentUser();
+            set({ isInitialized: true, isLoading: false });
+          } catch (error: any) {
           console.error('[AuthStore] Failed to fetch user:', error);
           // Check if we still have a refresh token - if so, don't clear everything immediately
           const stillHasRefreshToken = typeof window !== 'undefined' && !!localStorage.getItem(config.auth.tokenKeys.refreshToken);
@@ -215,7 +262,7 @@ export const useAuthStore = create<AuthState>()(
               isInitialized: false, // Allow retry
             });
           }
-        }
+          }}
       },
     }),
     {
@@ -224,6 +271,7 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
+        lastFetchTime: state.lastFetchTime,
       }),
     }
   )

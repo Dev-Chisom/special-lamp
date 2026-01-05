@@ -402,16 +402,16 @@ Requirements
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4 md:py-6 border-b flex-shrink-0">
         <div className="container mx-auto px-4 max-w-[1800px]">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
+        <div>
               <h1 className="text-2xl md:text-3xl font-bold mb-2">
                 Job Tracker
               </h1>
               <p className="text-sm md:text-base text-muted-foreground">
                 Track and manage your job applications
-              </p>
-            </div>
-          </div>
+          </p>
         </div>
+              </div>
+            </div>
       </div>
 
       {/* Scrollable Content */}
@@ -427,28 +427,28 @@ Requirements
                   <div className="mb-4 flex-shrink-0">
                     <Skeleton className="h-5 w-24 mb-2" />
                     <Skeleton className="h-3 w-48" />
-                  </div>
+              </div>
                   <div className="flex-1 space-y-3">
                     {[1, 2, 3].map((i) => (
                       <Card key={i} className="p-4">
                         <CardContent className="p-0 space-y-3">
                           <div className="flex justify-end">
                             <Skeleton className="h-5 w-16" />
-                          </div>
+            </div>
                           <Skeleton className="h-4 w-full" />
                           <Skeleton className="h-3 w-3/4" />
                           <div className="flex gap-2">
                             <Skeleton className="h-3 w-20" />
                             <Skeleton className="h-3 w-16" />
-                          </div>
-                        </CardContent>
-                      </Card>
+            </div>
+          </CardContent>
+        </Card>
                     ))}
-                  </div>
-                </div>
+              </div>
+            </div>
               ))}
             </div>
-          </div>
+      </div>
         ) : jobs.length === 0 ? (
           <EmptyState onJobListingsUpdate={setJobListings} />
         ) : (
@@ -484,7 +484,7 @@ Requirements
                         }}
                       />
                     ))}
-                  </div>
+            </div>
 
                   <DragOverlay>
                     {activeJob ? (
@@ -494,8 +494,8 @@ Requirements
                             <div className="flex justify-end mb-2">
                               <Badge variant="secondary">
                                 {activeJob.matchScore}
-                              </Badge>
-                            </div>
+                </Badge>
+              </div>
                           )}
                           <h3 className="font-semibold text-sm mb-1">
                             {activeJob.position}
@@ -512,7 +512,7 @@ Requirements
             </div>
           </div>
         )}
-      </div>
+          </div>
 
       <JobDetailView
         job={selectedJob}
@@ -535,6 +535,6 @@ Requirements
             : undefined
         }
       />
-    </div>
+        </div>
   )
 }
