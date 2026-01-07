@@ -539,45 +539,45 @@ export function ResumeBuilderInterface() {
                 ) : (
                   resumeData.experience.map((exp) => (
                     <div key={exp.id} className="space-y-4 p-4 border rounded-lg">
-                      <div className="flex items-start justify-between">
-                        <h4 className="font-semibold">Experience Entry</h4>
+                  <div className="flex items-start justify-between">
+                    <h4 className="font-semibold">Experience Entry</h4>
                         <Button
                           size="icon"
                           variant="ghost"
                           onClick={() => deleteExperience(exp.id)}
                         >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
                           <Label>Job Title *</Label>
                           <Input
                             placeholder="Senior Software Engineer"
                             value={exp.jobTitle}
                             onChange={(e) => updateExperience(exp.id, "jobTitle", e.target.value)}
                           />
-                        </div>
-                        <div className="space-y-2">
+                    </div>
+                    <div className="space-y-2">
                           <Label>Company *</Label>
                           <Input
                             placeholder="Tech Company Inc."
                             value={exp.company}
                             onChange={(e) => updateExperience(exp.id, "company", e.target.value)}
                           />
-                        </div>
-                      </div>
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
+                    </div>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
                           <Label>Start Date *</Label>
                           <Input
                             type="month"
                             value={exp.startDate}
                             onChange={(e) => updateExperience(exp.id, "startDate", e.target.value)}
                           />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>End Date</Label>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>End Date</Label>
                           <div className="flex items-center gap-2">
                             <Input
                               type="month"
@@ -598,22 +598,22 @@ export function ResumeBuilderInterface() {
                               </Label>
                             </div>
                           </div>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Description</Label>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Description</Label>
                         <Textarea
                           rows={4}
                           placeholder="• Led development of..."
                           value={exp.description}
                           onChange={(e) => updateExperience(exp.id, "description", e.target.value)}
                         />
-                        <Button size="sm" variant="outline" className="gap-2 bg-transparent">
-                          <Sparkles className="h-4 w-4" />
-                          Enhance with AI
-                        </Button>
-                      </div>
-                    </div>
+                    <Button size="sm" variant="outline" className="gap-2 bg-transparent">
+                      <Sparkles className="h-4 w-4" />
+                      Enhance with AI
+                    </Button>
+                  </div>
+                </div>
                   ))
                 )}
               </CardContent>
@@ -647,44 +647,44 @@ export function ResumeBuilderInterface() {
                 ) : (
                   resumeData.education.map((edu) => (
                     <div key={edu.id} className="space-y-4 p-4 border rounded-lg">
-                      <div className="flex items-start justify-between">
-                        <h4 className="font-semibold">Education Entry</h4>
+                  <div className="flex items-start justify-between">
+                    <h4 className="font-semibold">Education Entry</h4>
                         <Button
                           size="icon"
                           variant="ghost"
                           onClick={() => deleteEducation(edu.id)}
                         >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                      <div className="space-y-2">
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
                         <Label>School *</Label>
                         <Input
                           placeholder="University of California"
                           value={edu.school}
                           onChange={(e) => updateEducation(edu.id, "school", e.target.value)}
                         />
-                      </div>
-                      <div className="space-y-2">
+                  </div>
+                  <div className="space-y-2">
                         <Label>Degree *</Label>
                         <Input
                           placeholder="Bachelor of Science in Computer Science"
                           value={edu.degree}
                           onChange={(e) => updateEducation(edu.id, "degree", e.target.value)}
                         />
-                      </div>
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Start Year</Label>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Start Year</Label>
                           <Input
                             type="number"
                             placeholder="2015"
                             value={edu.startYear}
                             onChange={(e) => updateEducation(edu.id, "startYear", e.target.value)}
                           />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>End Year</Label>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>End Year</Label>
                           <div className="flex items-center gap-2">
                             <Input
                               type="number"
@@ -706,9 +706,9 @@ export function ResumeBuilderInterface() {
                               </Label>
                             </div>
                           </div>
-                        </div>
-                      </div>
                     </div>
+                  </div>
+                </div>
                   ))
                 )}
               </CardContent>
@@ -743,7 +743,7 @@ export function ResumeBuilderInterface() {
                     No skills added yet. Add your first skill above.
                   </p>
                 ) : (
-                  <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2">
                     {resumeData.skills.map((skill) => (
                       <Badge
                         key={skill}
@@ -761,9 +761,9 @@ export function ResumeBuilderInterface() {
                         >
                           ×
                         </button>
-                      </Badge>
+                  </Badge>
                     ))}
-                  </div>
+                </div>
                 )}
               </CardContent>
             </Card>

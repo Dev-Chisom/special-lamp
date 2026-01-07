@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -9,6 +9,9 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Mail, Copy, RefreshCw, Sparkles, Download } from "lucide-react"
+import { coverLetterService } from "@/services/cover-letter.service"
+import { resumeService, type CombinedResumeItem } from "@/services/resume.service"
+import { toast } from "sonner"
 
 type GenerateState = "idle" | "generating" | "complete"
 
@@ -24,50 +27,99 @@ export function CoverLetterInterface() {
   const [jobDescription, setJobDescription] = useState("")
   const [companyName, setCompanyName] = useState("")
   const [roleName, setRoleName] = useState("")
-  const [tone, setTone] = useState("professional")
+  const [tone, setTone] = useState<"formal" | "professional" | "friendly" | "casual">("professional")
+  const [selectedResumeId, setSelectedResumeId] = useState<string>("")
+  const [resumes, setResumes] = useState<CombinedResumeItem[]>([])
+  const [isLoadingResumes, setIsLoadingResumes] = useState(false)
   const [result, setResult] = useState<CoverLetterResult | null>(null)
 
-  const handleGenerate = async () => {
-    if (!jobDescription || !companyName || !roleName) return
-
-    setGenerateState("generating")
-
-    // Simulate AI generation
-    await new Promise((resolve) => setTimeout(resolve, 2500))
-
-    // Mock cover letter result
-    const mockResult: CoverLetterResult = {
-      coverLetter: `Dear Hiring Manager,
-
-I am writing to express my strong interest in the ${roleName} position at ${companyName}. With over five years of experience in software engineering and a proven track record of delivering scalable solutions, I am excited about the opportunity to contribute to your team's success.
-
-In my current role at TechCorp, I have led the development of microservices architecture that improved system performance by 65% while reducing deployment time by half. This experience aligns closely with ${companyName}'s focus on building robust, scalable infrastructure. I am particularly drawn to your commitment to innovation and technical excellence, as demonstrated by your recent work in cloud-native technologies.
-
-What sets me apart is my ability to bridge technical expertise with business outcomes. I have consistently delivered projects that not only meet technical requirements but also drive measurable business value. For example, I architected a real-time analytics platform that processed over 10 million events daily, enabling data-driven decision-making across the organization.
-
-I am impressed by ${companyName}'s mission and would be thrilled to bring my expertise in distributed systems, cloud infrastructure, and team leadership to your organization. I look forward to discussing how my background and skills can contribute to your team's goals.
-
-Thank you for considering my application. I am eager to explore this opportunity further.
-
-Best regards,
-[Your Name]`,
-      tone: tone,
-      wordCount: 245,
-      keyPoints: [
-        "Highlighted relevant experience with microservices",
-        "Quantified achievements with specific metrics",
-        "Connected skills to company's technology focus",
-        "Demonstrated business impact awareness",
-        "Expressed genuine interest in company mission",
-      ],
+  // Fetch user's resumes
+  useEffect(() => {
+    const fetchResumes = async () => {
+      setIsLoadingResumes(true)
+      try {
+        const response = await resumeService.getAllResumes({
+          page_size: 50, // Get all resumes
+        })
+        setResumes(response.items || [])
+        // Auto-select first resume if available
+        if (response.items && response.items.length > 0) {
+          setSelectedResumeId(response.items[0].id)
+        }
+      } catch (error: any) {
+        console.error("Failed to fetch resumes:", error)
+        toast.error("Failed to load resumes")
+      } finally {
+        setIsLoadingResumes(false)
+      }
     }
 
-    setResult(mockResult)
-    setGenerateState("complete")
+    fetchResumes()
+  }, [])
+
+  const handleGenerate = async () => {
+    if (!jobDescription || !companyName || !roleName) {
+      toast.error("Please fill in all required fields")
+      return
+    }
+
+    if (!selectedResumeId) {
+      toast.error("Please select a resume")
+      return
+    }
+
+    setGenerateState("generating")
+    setResult(null)
+
+    try {
+      const response = await coverLetterService.generateCoverLetter({
+        resume_id: selectedResumeId,
+        job_description: jobDescription,
+        company: companyName,
+        role: roleName,
+        tone: tone,
+      })
+
+      // Transform API response to UI format
+      const wordCount = response.content.split(/\s+/).length
+      const keyPoints = [
+        "AI-generated content tailored to the job description",
+        "Highlights relevant experience from your resume",
+        "Matches the selected tone and style",
+        "Includes company-specific references",
+        "Professional and compelling format",
+      ]
+
+      setResult({
+        coverLetter: response.content,
+        tone: response.tone,
+        wordCount,
+        keyPoints,
+      })
+      setGenerateState("complete")
+      toast.success("Cover letter generated successfully!")
+    } catch (error: any) {
+      console.error("Failed to generate cover letter:", error)
+      toast.error(error?.message || "Failed to generate cover letter. Please try again.")
+      setGenerateState("idle")
+    }
   }
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success("Copied to clipboard!")
+    } catch (error) {
+      toast.error("Failed to copy to clipboard")
+    }
+  }
+
+  const getResumeName = (resume: CombinedResumeItem): string => {
+    if (resume.type === 'file') {
+      return resume.title || resume.file_name || 'Untitled Resume'
+    } else {
+      return resume.name || 'Untitled Resume'
+    }
   }
 
   return (
@@ -100,9 +152,37 @@ Best regards,
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Resume Selection */}
+                <div className="space-y-2">
+                  <Label htmlFor="resume">Select Resume *</Label>
+                  {isLoadingResumes ? (
+                    <p className="text-sm text-muted-foreground">Loading resumes...</p>
+                  ) : resumes.length === 0 ? (
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">No resumes available. Please create or upload a resume first.</p>
+                      <Button variant="outline" onClick={() => window.location.href = '/dashboard/resume-builder'}>
+                        Create Resume
+                      </Button>
+                    </div>
+                  ) : (
+                    <Select value={selectedResumeId} onValueChange={setSelectedResumeId}>
+                      <SelectTrigger id="resume">
+                        <SelectValue placeholder="Select a resume" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {resumes.map((resume) => (
+                          <SelectItem key={resume.id} value={resume.id}>
+                            {getResumeName(resume)} ({resume.type === 'file' ? 'File' : 'Built'})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="company">Company Name</Label>
+                    <Label htmlFor="company">Company Name *</Label>
                     <Input
                       id="company"
                       placeholder="e.g., Google"
@@ -112,7 +192,7 @@ Best regards,
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="role">Role Name</Label>
+                    <Label htmlFor="role">Role Name *</Label>
                     <Input
                       id="role"
                       placeholder="e.g., Senior Software Engineer"
@@ -124,15 +204,15 @@ Best regards,
 
                 <div className="space-y-2">
                   <Label htmlFor="tone">Tone</Label>
-                  <Select value={tone} onValueChange={setTone}>
+                  <Select value={tone} onValueChange={(value) => setTone(value as any)}>
                     <SelectTrigger id="tone">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="formal">Formal</SelectItem>
                       <SelectItem value="professional">Professional</SelectItem>
-                      <SelectItem value="confident">Confident</SelectItem>
                       <SelectItem value="friendly">Friendly</SelectItem>
-                      <SelectItem value="enthusiastic">Enthusiastic</SelectItem>
+                      <SelectItem value="casual">Casual</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -151,7 +231,7 @@ Best regards,
 
                 <Button
                   onClick={handleGenerate}
-                  disabled={!jobDescription || !companyName || !roleName}
+                  disabled={!jobDescription || !companyName || !roleName || !selectedResumeId || resumes.length === 0}
                   className="w-full"
                   size="lg"
                 >

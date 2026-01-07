@@ -72,16 +72,11 @@ class CoverLetterService {
   /**
    * Update a cover letter's content
    * Endpoint: PUT /api/v1/cover-letter/{cover_letter_id}
+   * Now accepts JSON body: { "content": "..." }
    */
   async updateCoverLetter(id: string, data: UpdateCoverLetterRequest): Promise<CoverLetter> {
-    // Backend expects application/x-www-form-urlencoded
-    const formData = new URLSearchParams();
-    formData.append('content', data.content);
-
-    return apiClient.put<CoverLetter>(`/cover-letter/${id}`, formData.toString(), {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+    return apiClient.put<CoverLetter>(`/cover-letter/${id}`, {
+      content: data.content,
     });
   }
 

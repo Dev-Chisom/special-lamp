@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -45,6 +46,7 @@ import type { JobListing } from "@/components/job-tracker/types"
 
 
 export function FindJobsInterface() {
+  const router = useRouter()
   const [jobs, setJobs] = useState<IngestedJobResponse[]>([])
   const [selectedJob, setSelectedJob] = useState<IngestedJobResponse | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
@@ -198,7 +200,9 @@ export function FindJobsInterface() {
 
   const handleScan = () => {
     if (selectedJob) {
-      toast.info("Scan functionality coming soon")
+      // Navigate to scan page with job context
+      const jobDescription = selectedJob.job_description || selectedJob.description_snippet || ""
+      router.push(`/dashboard/scan?jobId=${selectedJob.id}&jobDescription=${encodeURIComponent(jobDescription)}`)
     }
   }
 

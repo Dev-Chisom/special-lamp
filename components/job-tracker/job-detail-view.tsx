@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
   Sheet,
   SheetContent,
@@ -32,6 +33,7 @@ export function JobDetailView({
   isReadOnly = false,
   onSaveToTracker,
 }: JobDetailViewProps) {
+  const router = useRouter()
   const [editedJob, setEditedJob] = useState<JobApplication | null>(null)
 
   useEffect(() => {
@@ -61,7 +63,10 @@ export function JobDetailView({
   }
 
   const handleScan = () => {
-    toast.info("Scan functionality coming soon")
+    // Navigate to scan page with job context
+    const jobDescription = job.description || job.requirements || ""
+    router.push(`/dashboard/scan?jobId=${job.id}&jobDescription=${encodeURIComponent(jobDescription)}`)
+    onOpenChange(false) // Close the detail view
   }
 
   const handleApply = () => {

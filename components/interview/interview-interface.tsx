@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { MessageSquare, Play, CheckCircle2, AlertCircle, TrendingUp, Clock, Target } from "lucide-react"
 import { motion } from "framer-motion"
+import { interviewService, type InterviewQuestion } from "@/services/interview.service"
+import { toast } from "sonner"
 
 type InterviewState = "setup" | "active" | "complete"
 
@@ -48,97 +50,145 @@ interface InterviewResult {
 export function InterviewInterface() {
   const [interviewState, setInterviewState] = useState<InterviewState>("setup")
   const [role, setRole] = useState("software-engineer")
-  const [stage, setStage] = useState("technical")
+  const [seniority, setSeniority] = useState<"Junior" | "Mid" | "Senior" | "Lead" | "Principal">("Senior")
+  const [stage, setStage] = useState<"phone_screen" | "technical" | "behavioral" | "final">("technical")
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [answer, setAnswer] = useState("")
   const [answers, setAnswers] = useState<string[]>([])
   const [result, setResult] = useState<InterviewResult | null>(null)
+  const [questions, setQuestions] = useState<InterviewQuestion[]>([])
+  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [isStarting, setIsStarting] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [questionResults, setQuestionResults] = useState<Array<{
+    question: string
+    answer: string
+    score: number
+    feedback: string
+    strengths: string[]
+    improvements: string[]
+  }>>([])
 
-  const questions: Question[] = [
-    {
-      id: 1,
-      question: "Tell me about a challenging technical problem you solved recently.",
-      type: "behavioral",
-      difficulty: "medium",
-    },
-    {
-      id: 2,
-      question: "How would you design a URL shortening service like bit.ly?",
-      type: "system_design",
-      difficulty: "hard",
-    },
-    {
-      id: 3,
-      question: "Describe a time when you had to work with a difficult team member. How did you handle it?",
-      type: "behavioral",
-      difficulty: "medium",
-    },
-  ]
+  const handleStartInterview = async () => {
+    setIsStarting(true)
+    try {
+      const response = await interviewService.startInterview({
+        role: role,
+        seniority: seniority,
+        stage: stage,
+      })
 
-  const handleStartInterview = () => {
-    setInterviewState("active")
-    setCurrentQuestionIndex(0)
-    setAnswers([])
-    setAnswer("")
-  }
-
-  const handleSubmitAnswer = () => {
-    const newAnswers = [...answers, answer]
-    setAnswers(newAnswers)
-    setAnswer("")
-
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1)
-    } else {
-      // Complete interview
-      completeInterview(newAnswers)
+      setSessionId(response.session_id)
+      setQuestions(response.questions)
+      setInterviewState("active")
+      setCurrentQuestionIndex(0)
+      setAnswers([])
+      setAnswer("")
+      setQuestionResults([])
+      toast.success("Interview session started!")
+    } catch (error: any) {
+      console.error("Failed to start interview:", error)
+      toast.error(error?.message || "Failed to start interview. Please try again.")
+    } finally {
+      setIsStarting(false)
     }
   }
 
-  const completeInterview = async (finalAnswers: string[]) => {
-    // Simulate AI evaluation
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+  const handleSubmitAnswer = async () => {
+    if (!answer.trim()) {
+      toast.error("Please provide an answer before submitting")
+      return
+    }
 
-    const mockResult: InterviewResult = {
-      questions: questions.map((q, idx) => ({
-        question: q.question,
+    if (!sessionId || questions.length === 0) {
+      toast.error("Interview session not initialized")
+      return
+    }
+
+    const currentQuestion = questions[currentQuestionIndex]
+    if (!currentQuestion) {
+      toast.error("Question not found")
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const response = await interviewService.submitAnswer(sessionId, {
+        question: currentQuestion.question,
+        answer: answer,
+      })
+
+      // Store result for this question
+      const questionResult = {
+        question: currentQuestion.question,
+        answer: answer,
+        score: response.score,
+        feedback: response.feedback,
+        strengths: response.strengths,
+        improvements: response.improvements,
+      }
+
+      const updatedResults = [...questionResults, questionResult]
+      setQuestionResults(updatedResults)
+      const newAnswers = [...answers, answer]
+      setAnswers(newAnswers)
+      setAnswer("")
+
+      if (currentQuestionIndex < questions.length - 1) {
+        setCurrentQuestionIndex(currentQuestionIndex + 1)
+        toast.success("Answer submitted! Moving to next question...")
+      } else {
+        // Complete interview - calculate overall scores using updated results
+        completeInterview(updatedResults, newAnswers)
+      }
+    } catch (error: any) {
+      console.error("Failed to submit answer:", error)
+      toast.error(error?.message || "Failed to submit answer. Please try again.")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const completeInterview = (allResults: typeof questionResults, finalAnswers: string[]) => {
+    // Calculate overall score from all question results
+    const totalScore = allResults.reduce((sum, r) => sum + r.score, 0)
+    const overallScore = Math.round(totalScore / allResults.length)
+
+    // Calculate aggregate scores (using average from individual scores)
+    const allStrengths = allResults.flatMap(r => r.strengths)
+    const allImprovements = allResults.flatMap(r => r.improvements)
+
+    const result: InterviewResult = {
+      questions: allResults.map((qr, idx) => ({
+        question: qr.question,
         answer: finalAnswers[idx] || "",
-        score: 75 + Math.floor(Math.random() * 20),
-        feedback:
-          "Your answer demonstrated good understanding of the problem. Consider providing more specific examples and quantifiable results.",
-        strengths: ["Clear structure", "Relevant experience mentioned"],
-        improvements: ["Add more specific metrics", "Elaborate on the impact"],
+        score: qr.score,
+        feedback: qr.feedback,
+        strengths: qr.strengths,
+        improvements: qr.improvements,
       })),
-      overallScore: 82,
+      overallScore: overallScore,
       aggregateScores: {
-        completeness: 85,
-        depth: 80,
-        clarity: 88,
-        relevance: 78,
-        communication: 84,
+        completeness: Math.round(overallScore * 0.9), // Approximate based on overall
+        depth: Math.round(overallScore * 0.95),
+        clarity: Math.round(overallScore * 0.9),
+        relevance: Math.round(overallScore * 0.85),
+        communication: Math.round(overallScore * 0.9),
       },
       summary: {
-        strengths: [
-          "Strong communication skills",
-          "Good technical knowledge",
-          "Clear problem-solving approach",
-          "Relevant examples provided",
-        ],
-        improvements: [
-          "Include more quantifiable metrics in your answers",
-          "Elaborate more on team collaboration aspects",
-          "Practice the STAR method for behavioral questions",
-        ],
+        strengths: Array.from(new Set(allStrengths)).slice(0, 5), // Unique strengths
+        improvements: Array.from(new Set(allImprovements)).slice(0, 5), // Unique improvements
         recommendations: [
-          "Review system design patterns for scaling",
-          "Practice explaining complex concepts simply",
-          "Prepare more examples demonstrating leadership",
+          "Review your answers to identify patterns in feedback",
+          "Practice the STAR method for behavioral questions",
+          "Prepare more examples with quantifiable metrics",
         ],
       },
     }
 
-    setResult(mockResult)
+    setResult(result)
     setInterviewState("complete")
+    toast.success("Interview completed! Review your results below.")
   }
 
   return (
@@ -170,33 +220,50 @@ export function InterviewInterface() {
                   <CardDescription>Choose the role and interview stage to practice</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="role">Target Role</Label>
-                    <Select value={role} onValueChange={setRole}>
-                      <SelectTrigger id="role">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="software-engineer">Software Engineer</SelectItem>
-                        <SelectItem value="product-manager">Product Manager</SelectItem>
-                        <SelectItem value="data-scientist">Data Scientist</SelectItem>
-                        <SelectItem value="designer">UX/UI Designer</SelectItem>
-                        <SelectItem value="marketing">Marketing Manager</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="role">Target Role</Label>
+                      <Select value={role} onValueChange={setRole}>
+                        <SelectTrigger id="role">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="software-engineer">Software Engineer</SelectItem>
+                          <SelectItem value="product-manager">Product Manager</SelectItem>
+                          <SelectItem value="data-scientist">Data Scientist</SelectItem>
+                          <SelectItem value="designer">UX/UI Designer</SelectItem>
+                          <SelectItem value="marketing">Marketing Manager</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="seniority">Seniority Level</Label>
+                      <Select value={seniority} onValueChange={(value) => setSeniority(value as any)}>
+                        <SelectTrigger id="seniority">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Junior">Junior (0-2 years)</SelectItem>
+                          <SelectItem value="Mid">Mid-Level (3-5 years)</SelectItem>
+                          <SelectItem value="Senior">Senior (6-10 years)</SelectItem>
+                          <SelectItem value="Lead">Lead (10+ years)</SelectItem>
+                          <SelectItem value="Principal">Principal (10+ years)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="stage">Interview Stage</Label>
-                    <Select value={stage} onValueChange={setStage}>
+                    <Select value={stage} onValueChange={(value) => setStage(value as any)}>
                       <SelectTrigger id="stage">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="screening">Phone Screening</SelectItem>
+                        <SelectItem value="phone_screen">Phone Screening</SelectItem>
                         <SelectItem value="technical">Technical Interview</SelectItem>
                         <SelectItem value="behavioral">Behavioral Interview</SelectItem>
-                        <SelectItem value="system-design">System Design</SelectItem>
                         <SelectItem value="final">Final Round</SelectItem>
                       </SelectContent>
                     </Select>
@@ -205,16 +272,27 @@ export function InterviewInterface() {
                   <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                     <h4 className="font-medium text-sm">What to expect:</h4>
                     <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                      <li>{questions.length} questions tailored to your role and stage</li>
+                      <li>3-5 questions tailored to your role and stage</li>
                       <li>Detailed AI feedback on each answer</li>
                       <li>Overall performance score and recommendations</li>
                       <li>Approximately 15-20 minutes</li>
                     </ul>
                   </div>
 
-                  <Button onClick={handleStartInterview} className="w-full" size="lg">
-                    <Play className="mr-2 h-5 w-5" />
-                    Start Mock Interview
+                  <Button 
+                    onClick={handleStartInterview} 
+                    className="w-full" 
+                    size="lg"
+                    disabled={isStarting}
+                  >
+                    {isStarting ? (
+                      <>Starting Interview...</>
+                    ) : (
+                      <>
+                        <Play className="mr-2 h-5 w-5" />
+                        Start Mock Interview
+                      </>
+                    )}
                   </Button>
                 </CardContent>
               </Card>
@@ -253,20 +331,20 @@ export function InterviewInterface() {
             </>
           )}
 
-          {interviewState === "active" && (
+          {interviewState === "active" && questions.length > 0 && (
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between mb-2">
                   <Badge variant="outline">
                     Question {currentQuestionIndex + 1} of {questions.length}
                   </Badge>
-                  <Badge>{questions[currentQuestionIndex].type}</Badge>
+                  <Badge>{questions[currentQuestionIndex]?.type || "unknown"}</Badge>
                 </div>
                 <Progress value={((currentQuestionIndex + 1) / questions.length) * 100} className="h-2 mb-4" />
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="bg-primary/5 border border-primary/20 rounded-lg p-6">
-                  <p className="text-lg font-medium leading-relaxed">{questions[currentQuestionIndex].question}</p>
+                  <p className="text-lg font-medium leading-relaxed">{questions[currentQuestionIndex]?.question || ""}</p>
                 </div>
 
                 <div className="space-y-2">
@@ -276,6 +354,7 @@ export function InterviewInterface() {
                     placeholder="Type your answer here... (Aim for 2-3 minutes worth of content)"
                     value={answer}
                     onChange={(e) => setAnswer(e.target.value)}
+                    disabled={isSubmitting}
                     rows={12}
                     className="resize-none"
                   />
@@ -283,8 +362,17 @@ export function InterviewInterface() {
                 </div>
 
                 <div className="flex gap-3">
-                  <Button onClick={handleSubmitAnswer} disabled={!answer.trim()} className="flex-1" size="lg">
-                    {currentQuestionIndex < questions.length - 1 ? "Next Question" : "Complete Interview"}
+                  <Button 
+                    onClick={handleSubmitAnswer} 
+                    disabled={!answer.trim() || isSubmitting} 
+                    className="flex-1" 
+                    size="lg"
+                  >
+                    {isSubmitting ? (
+                      <>Submitting...</>
+                    ) : (
+                      <>{currentQuestionIndex < questions.length - 1 ? "Submit & Next Question" : "Submit & Complete Interview"}</>
+                    )}
                   </Button>
                 </div>
               </CardContent>
