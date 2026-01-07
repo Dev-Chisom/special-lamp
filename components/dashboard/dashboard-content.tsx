@@ -29,6 +29,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import { dashboardService, type DashboardResponse } from "@/services/dashboard.service"
 import { resumeService, type CombinedResumeItem } from "@/services/resume.service"
+import { jobService } from "@/services/job.service"
 
 export function DashboardContent() {
   const { user } = useAuthStore()
@@ -300,6 +301,7 @@ export function DashboardContent() {
                   {dashboardData.recommended_jobs.slice(0, 3).map((job) => (
                     <JobCard
                       key={job.id}
+                      jobId={job.id}
                       company={job.company || "Company"}
                       title={job.title}
                       location={job.location || "Location not specified"}
@@ -415,6 +417,7 @@ function JobCard({
   posted,
   tags,
   externalUrl,
+  jobId,
 }: {
   company: string
   title: string
@@ -424,7 +427,35 @@ function JobCard({
   posted?: string
   tags: string[]
   externalUrl?: string
+  jobId?: string
 }) {
+  const router = useRouter()
+
+  const handleSaveJob = async () => {
+    try {
+      await jobService.saveJob({
+        title,
+        company,
+        location,
+        job_type: "full_time", // Default, can be updated later
+        description: "",
+        external_url: externalUrl || "",
+        ingested_job_id: jobId, // Use jobId if it's an ingested job
+        source: "dashboard",
+      })
+      toast.success("Job saved to tracker!")
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to save job")
+    }
+  }
+
+  const handleScanResume = () => {
+    router.push("/dashboard/scan")
+  }
+
+  const handleGenerateCoverLetter = () => {
+    router.push("/dashboard/cover-letter")
+  }
   return (
     <Card className="group hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 cursor-pointer">
       <CardContent className="p-6 sm:p-6">
@@ -491,15 +522,15 @@ function JobCard({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSaveJob}>
                   <Bookmark className="mr-2 h-4 w-4" />
                   Save Job
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleScanResume}>
                   <FileText className="mr-2 h-4 w-4" />
                   Scan Resume
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleGenerateCoverLetter}>
                   <Mail className="mr-2 h-4 w-4" />
                   Generate Cover Letter
                 </DropdownMenuItem>

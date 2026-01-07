@@ -24,7 +24,17 @@ export function RewriteInterface() {
   const [rewriteState, setRewriteState] = useState<RewriteState>("idle")
   const [originalText, setOriginalText] = useState("")
   const [industry, setIndustry] = useState("Technology")
+  const [seniority, setSeniority] = useState("mid")
   const [result, setResult] = useState<RewriteResult | null>(null)
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success("Copied to clipboard!")
+    } catch (error) {
+      toast.error("Failed to copy to clipboard")
+    }
+  }
 
   const handleRewrite = async () => {
     if (!originalText.trim()) {
@@ -223,10 +233,7 @@ export function RewriteInterface() {
                       <CardTitle className="text-lg sm:text-xl">AI-Enhanced Version</CardTitle>
                       <CardDescription className="text-sm">Compare original and improved versions</CardDescription>
                     </div>
-                    <Badge variant="secondary" className="gap-2 w-fit">
-                      <TrendingUp className="h-3 w-3" />
-                      {result.confidence}% Confidence
-                    </Badge>
+                    {/* Confidence badge removed - not in API response */}
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -258,27 +265,7 @@ export function RewriteInterface() {
                           </Button>
                         </div>
 
-                        {/* Alternative Versions */}
-                        {result.alternatives.length > 0 && (
-                          <div className="space-y-3">
-                            <Label>Alternative Versions</Label>
-                            {result.alternatives.map((alt, idx) => (
-                              <div key={idx} className="relative">
-                                <div className="bg-muted/50 border border-border rounded-lg p-4">
-                                  <p className="text-sm leading-relaxed">{alt}</p>
-                                </div>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="absolute top-2 right-2"
-                                  onClick={() => copyToClipboard(alt)}
-                                >
-                                  <Copy className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                        {/* Alternative Versions - Not in API response, removed */}
                       </div>
                     </TabsContent>
 
@@ -302,38 +289,7 @@ export function RewriteInterface() {
                 </CardContent>
               </Card>
 
-              {/* Analysis Details */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg sm:text-xl">What Changed</CardTitle>
-                    <CardDescription className="text-sm">Key improvements made to your content</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {result.changes.map((change, idx) => (
-                      <Alert key={idx}>
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription className="text-sm">{change}</AlertDescription>
-                      </Alert>
-                    ))}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg sm:text-xl">Why It's Better</CardTitle>
-                    <CardDescription className="text-sm">Impact of the improvements</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {result.improvements.map((improvement, idx) => (
-                      <div key={idx} className="flex items-start gap-3">
-                        <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
-                        <p className="text-sm">{improvement}</p>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              </div>
+              {/* Analysis Details - Not in API response, removed */}
             </>
           )}
         </div>
