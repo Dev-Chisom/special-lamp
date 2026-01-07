@@ -4,14 +4,14 @@ import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, Linkedin, Upload, FileText, Sparkles } from "lucide-react"
+import { Plus, /* Linkedin, */ Upload, FileText, Sparkles } from "lucide-react"
 import { resumeService } from "@/services/resume.service"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
 interface ResumeBuilderStartProps {
   onStartBuilding: () => void
-  onImportLinkedIn: () => void
+  onImportLinkedIn?: () => void // TEMPORARILY DISABLED - LinkedIn import feature
   onImportFile: (file: File) => void
 }
 
@@ -66,12 +66,13 @@ export function ResumeBuilderStart({
     }
   }
 
-  const handleLinkedInImport = async () => {
-    // For now, redirect to LinkedIn scan page
-    // In the future, this could trigger a LinkedIn profile import directly
-    onImportLinkedIn()
-    window.location.href = '/dashboard/linkedin-scan'
-  }
+  // TEMPORARILY DISABLED - LinkedIn import feature
+  // const handleLinkedInImport = async () => {
+  //   // For now, redirect to LinkedIn scan page
+  //   // In the future, this could trigger a LinkedIn profile import directly
+  //   onImportLinkedIn()
+  //   window.location.href = '/dashboard/linkedin-scan'
+  // }
 
   return (
     <div className="container mx-auto px-4 py-4 sm:py-6 md:py-8 max-w-7xl">
@@ -84,7 +85,7 @@ export function ResumeBuilderStart({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
         {/* Create New Resume */}
         <Card 
           className={cn(
@@ -121,8 +122,8 @@ export function ResumeBuilderStart({
           </CardContent>
         </Card>
 
-        {/* Import from LinkedIn */}
-        <Card 
+        {/* Import from LinkedIn - TEMPORARILY DISABLED */}
+        {/* <Card 
           className={cn(
             "group transition-all duration-300",
             isImporting 
@@ -156,7 +157,7 @@ export function ResumeBuilderStart({
               Import from LinkedIn
             </Button>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Import Resume File */}
         <Card className="group hover:shadow-lg hover:shadow-primary/10 transition-all duration-300">

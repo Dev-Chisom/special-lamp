@@ -17,7 +17,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import {
   Home,
-  Linkedin,
+  // Linkedin, // TEMPORARILY DISABLED
   ListChecks,
   Briefcase,
   FileEdit,
@@ -39,7 +39,7 @@ import { useRouter } from "next/navigation"
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
-  { name: "LinkedIn Scan", href: "/dashboard/linkedin-scan", icon: Linkedin },
+  // { name: "LinkedIn Scan", href: "/dashboard/linkedin-scan", icon: Linkedin }, // TEMPORARILY DISABLED
   { name: "Job Tracker", href: "/dashboard/job-tracker", icon: ListChecks },
   { name: "Find Jobs", href: "/dashboard/find-jobs", icon: Briefcase },
   { name: "Resume Builder", href: "/dashboard/resume-builder", icon: FileEdit },

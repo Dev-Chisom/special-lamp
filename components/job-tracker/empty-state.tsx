@@ -12,7 +12,7 @@ import {
   EmptyContent,
   EmptyMedia,
 } from "@/components/ui/empty"
-import { Briefcase, Upload, Linkedin, Search, FileText } from "lucide-react"
+import { Briefcase, Upload, /* Linkedin, */ Search, FileText } from "lucide-react"
 import { toast } from "sonner"
 import { resumeService } from "@/services/resume.service"
 import { jobService } from "@/services/job.service"
@@ -95,13 +95,13 @@ export function EmptyState({ onJobListingsUpdate }: EmptyStateProps) {
             Start Tracking Your Job Applications
           </h2>
           <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto">
-            Get personalized job recommendations by uploading your resume or scanning your LinkedIn profile. 
+            Get personalized job recommendations by uploading your resume. 
             Our AI will match you with jobs based on your skills and experience.
           </p>
         </div>
 
         {/* Action Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Upload Resume Card */}
           <Card className="group relative overflow-hidden border hover:border-primary/50 transition-all duration-300 hover:shadow-md">
             <CardContent className="p-5 sm:p-6">
@@ -146,8 +146,8 @@ export function EmptyState({ onJobListingsUpdate }: EmptyStateProps) {
             </CardContent>
           </Card>
 
-          {/* Scan LinkedIn Card */}
-          <Card className="group relative overflow-hidden border hover:border-blue-500/50 transition-all duration-300 hover:shadow-md">
+          {/* Scan LinkedIn Card - TEMPORARILY DISABLED */}
+          {/* <Card className="group relative overflow-hidden border hover:border-blue-500/50 transition-all duration-300 hover:shadow-md">
             <CardContent className="p-5 sm:p-6">
               <div className="flex flex-col items-center text-center space-y-3">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-gradient-to-br from-blue-500/20 to-blue-500/5 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
@@ -167,10 +167,10 @@ export function EmptyState({ onJobListingsUpdate }: EmptyStateProps) {
                 </Link>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
 
           {/* Browse Jobs Card */}
-          <Card className="group relative overflow-hidden border hover:border-emerald-500/50 transition-all duration-300 hover:shadow-md sm:col-span-2 lg:col-span-1">
+          <Card className="group relative overflow-hidden border hover:border-emerald-500/50 transition-all duration-300 hover:shadow-md">
             <CardContent className="p-5 sm:p-6">
               <div className="flex flex-col items-center text-center space-y-3">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
