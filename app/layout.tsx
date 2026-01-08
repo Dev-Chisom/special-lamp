@@ -1,7 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
-import { Analytics } from "@vercel/analytics/next"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/components/auth/auth-provider"
 import { Toaster } from "@/components/ui/sonner"
@@ -17,19 +16,15 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/icon-light-32x32.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/icon-dark-32x32.png",
-        media: "(prefers-color-scheme: dark)",
-      },
-      {
         url: "/icon.svg",
         type: "image/svg+xml",
       },
+      {
+        url: "/favicon.ico",
+        sizes: "any",
+      },
     ],
-    apple: "/apple-icon.png",
+    apple: "/icon.svg",
   },
 }
 
@@ -47,7 +42,6 @@ export default function RootLayout({
           </AuthProvider>
         </ThemeProvider>
         <Toaster />
-        <Analytics />
       </body>
     </html>
   )
