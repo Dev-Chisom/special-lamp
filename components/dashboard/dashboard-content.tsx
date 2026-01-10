@@ -39,6 +39,10 @@ export function DashboardContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [resumes, setResumes] = useState<CombinedResumeItem[]>([])
   const [isLoadingResumes, setIsLoadingResumes] = useState(false)
+  const [savedJobs, setSavedJobs] = useState<any[]>([])
+  const [isLoadingSavedJobs, setIsLoadingSavedJobs] = useState(false)
+  const [appliedJobs, setAppliedJobs] = useState<any[]>([])
+  const [isLoadingAppliedJobs, setIsLoadingAppliedJobs] = useState(false)
 
   // Fetch dashboard data
   useEffect(() => {
@@ -83,6 +87,50 @@ export function DashboardContent() {
       }
 
       fetchResumes()
+    }
+  }, [activeTab])
+
+  // Fetch saved jobs when Saved Jobs tab is active
+  useEffect(() => {
+    if (activeTab === "saved") {
+      const fetchSavedJobs = async () => {
+        setIsLoadingSavedJobs(true)
+        try {
+          const jobs = await jobService.getJobs({ status: "saved", page_size: 10 })
+          // Handle both array and object with items property
+          const jobsArray = Array.isArray(jobs) ? jobs : (jobs as any)?.items || []
+          setSavedJobs(jobsArray)
+        } catch (error: any) {
+          console.error("Failed to fetch saved jobs:", error)
+          toast.error(error?.message || "Failed to load saved jobs")
+        } finally {
+          setIsLoadingSavedJobs(false)
+        }
+      }
+
+      fetchSavedJobs()
+    }
+  }, [activeTab])
+
+  // Fetch applied jobs when Applied tab is active
+  useEffect(() => {
+    if (activeTab === "applied") {
+      const fetchAppliedJobs = async () => {
+        setIsLoadingAppliedJobs(true)
+        try {
+          const jobs = await jobService.getJobs({ status: "applied", page_size: 10 })
+          // Handle both array and object with items property
+          const jobsArray = Array.isArray(jobs) ? jobs : (jobs as any)?.items || []
+          setAppliedJobs(jobsArray)
+        } catch (error: any) {
+          console.error("Failed to fetch applied jobs:", error)
+          toast.error(error?.message || "Failed to load applied jobs")
+        } finally {
+          setIsLoadingAppliedJobs(false)
+        }
+      }
+
+      fetchAppliedJobs()
     }
   }, [activeTab])
 
@@ -339,22 +387,105 @@ export function DashboardContent() {
             </TabsContent>
 
             <TabsContent value="saved" className="space-y-4">
-              <div className="text-center py-12">
-                <Bookmark className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-semibold mb-2">No saved jobs yet</h3>
-                <p className="text-muted-foreground mb-4">Bookmark jobs you're interested in to view them here</p>
-                <Link href="/dashboard/find-jobs">
-                  <Button>Browse Jobs</Button>
-                </Link>
-              </div>
+              {isLoadingSavedJobs ? (
+                <>
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i}>
+                      <CardContent className="p-6">
+                        <Skeleton className="h-32 w-full" />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </>
+              ) : savedJobs.length > 0 ? (
+                <>
+                  {savedJobs.slice(0, 3).map((job) => (
+                    <JobCard
+                      key={job.id}
+                      jobId={job.id}
+                      company={job.company || "Company"}
+                      title={job.title}
+                      location={job.location || "Location not specified"}
+                      matchScore={job.match_score ? Math.round(job.match_score) : undefined}
+                      salary={job.salary_range || undefined}
+                      posted={job.applied_at ? new Date(job.applied_at).toLocaleDateString() : undefined}
+                      tags={[]}
+                      externalUrl={job.external_url}
+                    />
+                  ))}
+                  {savedJobs.length > 3 && (
+                    <div className="pt-2">
+                      <Link href="/dashboard/job-tracker">
+                        <Button variant="outline" className="w-full">
+                          View All Saved Jobs ({savedJobs.length - 3} more)
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <Bookmark className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="text-lg font-semibold mb-2">No saved jobs yet</h3>
+                    <p className="text-muted-foreground mb-4">Bookmark jobs you're interested in to view them here</p>
+                    <Link href="/dashboard/find-jobs">
+                      <Button>Browse Jobs</Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="applied" className="space-y-4">
-              <div className="text-center py-12">
-                <TrendingUp className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-semibold mb-2">Track your applications</h3>
-                <p className="text-muted-foreground mb-4">Applications you track will appear here</p>
-              </div>
+              {isLoadingAppliedJobs ? (
+                <>
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i}>
+                      <CardContent className="p-6">
+                        <Skeleton className="h-32 w-full" />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </>
+              ) : appliedJobs.length > 0 ? (
+                <>
+                  {appliedJobs.slice(0, 3).map((job) => (
+                    <JobCard
+                      key={job.id}
+                      jobId={job.id}
+                      company={job.company || "Company"}
+                      title={job.title}
+                      location={job.location || "Location not specified"}
+                      matchScore={job.match_score ? Math.round(job.match_score) : undefined}
+                      salary={job.salary_range || undefined}
+                      posted={job.applied_at ? new Date(job.applied_at).toLocaleDateString() : undefined}
+                      tags={[]}
+                      externalUrl={job.external_url}
+                    />
+                  ))}
+                  {appliedJobs.length > 3 && (
+                    <div className="pt-2">
+                      <Link href="/dashboard/job-tracker">
+                        <Button variant="outline" className="w-full">
+                          View All Applied Jobs ({appliedJobs.length - 3} more)
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <TrendingUp className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="text-lg font-semibold mb-2">No applied jobs yet</h3>
+                    <p className="text-muted-foreground mb-4">Jobs you've applied to will appear here</p>
+                    <Link href="/dashboard/find-jobs">
+                      <Button>Browse Jobs</Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="resumes" className="space-y-4">

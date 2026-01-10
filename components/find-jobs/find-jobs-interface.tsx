@@ -63,9 +63,28 @@ export function FindJobsInterface() {
   const pageSize = 12
 
   // Debounce search
-  const searchTimeoutRef = useRef<NodeJS.Timeout>()
+  const searchTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
+  const prevFiltersRef = useRef<string>("")
 
   useEffect(() => {
+    // Check if filters changed (excluding page)
+    const currentFilters = `${searchQuery}|${location}|${dateRange}|${jobType}|${remoteOption}|${sortBy}`
+    const filtersChanged = prevFiltersRef.current && prevFiltersRef.current !== currentFilters
+    
+    // Reset to page 1 when filters change
+    if (filtersChanged) {
+      if (currentPage !== 1) {
+        prevFiltersRef.current = currentFilters
+        setCurrentPage(1)
+        return // Exit early, will refetch when currentPage updates to 1
+      }
+      // If already on page 1, update ref and continue to fetch
+      prevFiltersRef.current = currentFilters
+    } else if (!prevFiltersRef.current) {
+      // First render - initialize the ref
+      prevFiltersRef.current = currentFilters
+    }
+
     const fetchJobs = async () => {
       setIsLoading(true)
       try {
@@ -73,9 +92,20 @@ export function FindJobsInterface() {
           query: searchQuery || undefined,
           location: location || undefined,
           employment_type: jobType !== "all" ? (jobType as any) : undefined,
-          remote_only: remoteOption === "remote" ? true : undefined,
           page: currentPage,
           page_size: pageSize,
+        }
+
+        // Handle remote/hybrid/onsite filter
+        // Note: Backend might not support location_type filtering yet, so we'll filter client-side for hybrid/onsite
+        if (remoteOption === "remote") {
+          params.remote_only = true
+        } else if (remoteOption === "all") {
+          // Don't set remote_only - show all
+        } else {
+          // For hybrid/onsite, we can't filter on backend yet, so we'll need to do client-side
+          // For now, just don't set remote_only (show all, then filter client-side)
+          // TODO: Add location_type parameter to backend API
         }
 
         // Add date range filter
@@ -94,13 +124,38 @@ export function FindJobsInterface() {
         }
 
         const response = await jobService.searchJobs(params)
-        setJobs(response.items || [])
-        setTotalJobs(response.total || 0)
-        setTotalPages(Math.ceil((response.total || 0) / pageSize))
+        let filteredJobs = response.items || []
+
+        // Client-side filtering for hybrid/onsite (until backend supports location_type)
+        if (remoteOption === "hybrid") {
+          filteredJobs = filteredJobs.filter(job => job.location_type === "hybrid")
+        } else if (remoteOption === "onsite") {
+          filteredJobs = filteredJobs.filter(job => job.location_type === "onsite")
+        }
+
+        // Client-side sorting (until backend supports sort_by parameter)
+        if (sortBy === "recent") {
+          filteredJobs.sort((a, b) => new Date(b.date_posted).getTime() - new Date(a.date_posted).getTime())
+        } else if (sortBy === "salary") {
+          // Note: Salary sorting requires salary data which might not be available
+          // For now, just keep original order
+        }
+        // "relevance" keeps original order
+
+        setJobs(filteredJobs)
+        // Update total to reflect filtered results
+        const total = remoteOption === "all" || remoteOption === "remote" 
+          ? (response.total || 0) 
+          : filteredJobs.length
+        setTotalJobs(total)
+        setTotalPages(Math.ceil(total / pageSize))
 
         // Auto-select first job if available (desktop only, 1210px+)
-        if (response.items.length > 0 && !selectedJob && typeof window !== 'undefined' && window.innerWidth >= 1210) {
-          setSelectedJob(response.items[0])
+        if (filteredJobs.length > 0 && !selectedJob && typeof window !== 'undefined' && window.innerWidth >= 1210) {
+          setSelectedJob(filteredJobs[0])
+        } else if (filteredJobs.length === 0) {
+          // Clear selection if no jobs match filters
+          setSelectedJob(null)
         }
       } catch (error: any) {
         console.error("Failed to fetch jobs:", error)
@@ -124,12 +179,7 @@ export function FindJobsInterface() {
         clearTimeout(searchTimeoutRef.current)
       }
     }
-  }, [searchQuery, location, dateRange, jobType, remoteOption, currentPage])
-
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [searchQuery, location, dateRange, jobType, remoteOption])
+  }, [searchQuery, location, dateRange, jobType, remoteOption, sortBy, currentPage])
 
   const handleClearAll = () => {
     setSearchQuery("")

@@ -10,9 +10,10 @@ import {
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { MapPin, Briefcase, Archive } from "lucide-react"
+import { MapPin, Briefcase, Archive, Loader2 } from "lucide-react"
 import { toast } from "sonner"
-import type { JobApplication } from "./types"
+import { jobService, type IngestedJobResponse } from "@/services/job.service"
+import type { JobApplication, JobListing } from "./types"
 
 interface JobDetailViewProps {
   job: JobApplication | null
@@ -22,6 +23,7 @@ interface JobDetailViewProps {
   onDelete: (id: string) => void
   isReadOnly?: boolean
   onSaveToTracker?: (job: JobApplication) => void
+  ingestedJob?: IngestedJobResponse | null // Optional: The original ingested job if this is from a listing
 }
 
 export function JobDetailView({
@@ -32,9 +34,11 @@ export function JobDetailView({
   onDelete,
   isReadOnly = false,
   onSaveToTracker,
+  ingestedJob,
 }: JobDetailViewProps) {
   const router = useRouter()
   const [editedJob, setEditedJob] = useState<JobApplication | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     if (job) {
@@ -74,6 +78,63 @@ export function JobDetailView({
       window.open(job.jobUrl, "_blank")
     } else {
       toast.error("Job URL not available")
+    }
+  }
+
+  const handleSaveToTracker = async () => {
+    if (!job) return
+    
+    setIsSaving(true)
+    try {
+      // If onSaveToTracker prop is provided, use it (for job listings from Jobs Panel)
+      if (onSaveToTracker) {
+        await onSaveToTracker(job)
+        toast.success("Job saved to tracker")
+      } else if (ingestedJob) {
+        // If we have the original ingested job, use the helper function
+        const createRequest = jobService.ingestedJobToCreateRequest(ingestedJob)
+        await jobService.saveJob(createRequest)
+        toast.success("Job saved to tracker")
+      } else if (job.id.startsWith("listing-")) {
+        // This is from a listing, we need to fetch the ingested job or use job data
+        // For now, construct from available job data
+        await jobService.saveJob({
+          title: job.position,
+          company: job.company,
+          location: job.location,
+          job_type: "full_time", // Default
+          description: job.jobDescription || "",
+          requirements: "",
+          source: "platform",
+          external_url: job.jobUrl || "",
+          ingested_job_id: job.id.replace("listing-", ""), // Extract original ID
+        })
+        toast.success("Job saved to tracker")
+      } else {
+        // For already saved jobs, this button shouldn't be visible
+        // But if it is, we'll try to save it anyway (will likely fail with duplicate)
+        await jobService.saveJob({
+          title: job.position,
+          company: job.company,
+          location: job.location,
+          job_type: "full_time", // Default
+          description: job.jobDescription || "",
+          requirements: "",
+          source: "manual",
+          external_url: job.jobUrl || "",
+        })
+        toast.success("Job saved to tracker")
+      }
+      onOpenChange(false)
+    } catch (error: any) {
+      console.error("Failed to save job:", error)
+      if (error?.statusCode === 409 || error?.message?.includes('already') || error?.message?.includes('duplicate')) {
+        toast.error("Job already in your tracker")
+      } else {
+        toast.error(error?.message || "Failed to save job to tracker")
+      }
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -123,8 +184,19 @@ export function JobDetailView({
             <Button onClick={handleScan} variant="outline">
               Scan
             </Button>
-            <Button onClick={() => toast.info("Job saved")} variant="outline">
-              Save Job
+            <Button 
+              onClick={handleSaveToTracker} 
+              variant="outline"
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Job"
+              )}
             </Button>
             <Button onClick={handleApply} className="flex-1">
               Apply

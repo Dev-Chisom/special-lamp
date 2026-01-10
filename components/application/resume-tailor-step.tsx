@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { resumeService } from "@/services/resume.service"
+import { resumeService, type ResumeBuild } from "@/services/resume.service"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,7 +13,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Loader2, Sparkles, RefreshCw, FileText } from "lucide-react"
+import { backendToFrontend } from "@/components/resume-builder/resume-data-utils"
+import { getTemplateRenderer } from "@/components/resume-builder/template-renderers"
+import { config } from "@/lib/config"
 import type { Resume } from "@/services/resume.service"
 
 interface ResumeTailorStepProps {
@@ -158,11 +162,57 @@ export function ResumeTailorStep({
                   <p className="text-sm text-muted-foreground">
                     This resume has been optimized for the job requirements.
                   </p>
-                  {/* TODO: Display tailored resume preview when backend provides it */}
-                  <div className="mt-4 p-4 bg-background border rounded-md">
-                    <p className="text-sm text-muted-foreground italic">
-                      Resume preview will be displayed here when tailoring is implemented.
-                    </p>
+                  {/* Tailored Resume Preview */}
+                  <div className="mt-4">
+                    {/* Check if it's a built resume (has personal_info) */}
+                    {'personal_info' in tailoredResume ? (
+                      <div className="border rounded-md overflow-hidden bg-background">
+                        <ScrollArea className="h-[600px] w-full">
+                          <div className="bg-gray-50 p-4 flex justify-center">
+                            <div 
+                              className="bg-white shadow-lg"
+                              style={{
+                                width: '100%',
+                                maxWidth: '816px',
+                                minHeight: '1056px',
+                                padding: '2rem',
+                              }}
+                            >
+                              {(() => {
+                                const TemplateRenderer = getTemplateRenderer((tailoredResume as ResumeBuild).template || 'modern-professional')
+                                return <TemplateRenderer data={backendToFrontend(tailoredResume as ResumeBuild)} templateId={(tailoredResume as ResumeBuild).template || 'modern-professional'} />
+                              })()}
+                            </div>
+                          </div>
+                        </ScrollArea>
+                      </div>
+                    ) : tailoredResume.file_url || (tailoredResume as any).pdf_url ? (
+                      /* File-based resume - show PDF in iframe */
+                      <div className="border rounded-md overflow-hidden bg-background">
+                        <iframe
+                          src={`${tailoredResume.file_url || (tailoredResume as any).pdf_url}${(tailoredResume.file_url || (tailoredResume as any).pdf_url)?.includes('?') ? '&' : '?'}token=${typeof window !== 'undefined' ? localStorage.getItem(config.auth.tokenKeys.accessToken) || '' : ''}`}
+                          className="w-full h-[600px] border-0"
+                          title="Tailored Resume Preview"
+                        />
+                      </div>
+                    ) : (
+                      <div className="p-4 bg-background border rounded-md">
+                        <p className="text-sm text-muted-foreground">
+                          {(tailoredResume as any).parsed_content ? (
+                            <div className="space-y-2">
+                              <p className="font-medium">Tailored Content:</p>
+                              <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-96">
+                                {typeof (tailoredResume as any).parsed_content === 'string' 
+                                  ? (tailoredResume as any).parsed_content 
+                                  : JSON.stringify((tailoredResume as any).parsed_content, null, 2)}
+                              </pre>
+                            </div>
+                          ) : (
+                            'Resume has been tailored. The optimized version will be used for this application.'
+                          )}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </TabsContent>
@@ -178,10 +228,57 @@ export function ResumeTailorStep({
                   <p className="text-sm text-muted-foreground">
                     Your original resume file.
                   </p>
-                  <div className="mt-4 p-4 bg-background border rounded-md">
-                    <p className="text-sm text-muted-foreground italic">
-                      Original resume preview will be displayed here.
-                    </p>
+                  {/* Original Resume Preview */}
+                  <div className="mt-4">
+                    {/* Check if it's a built resume (has personal_info) */}
+                    {'personal_info' in resume ? (
+                      <div className="border rounded-md overflow-hidden bg-background">
+                        <ScrollArea className="h-[600px] w-full">
+                          <div className="bg-gray-50 p-4 flex justify-center">
+                            <div 
+                              className="bg-white shadow-lg"
+                              style={{
+                                width: '100%',
+                                maxWidth: '816px',
+                                minHeight: '1056px',
+                                padding: '2rem',
+                              }}
+                            >
+                              {(() => {
+                                const TemplateRenderer = getTemplateRenderer((resume as any).template || 'modern-professional')
+                                return <TemplateRenderer data={backendToFrontend(resume as ResumeBuild)} templateId={(resume as any).template || 'modern-professional'} />
+                              })()}
+                            </div>
+                          </div>
+                        </ScrollArea>
+                      </div>
+                    ) : resume.file_url ? (
+                      /* File-based resume - show PDF in iframe */
+                      <div className="border rounded-md overflow-hidden bg-background">
+                        <iframe
+                          src={`${resume.file_url}${resume.file_url.includes('?') ? '&' : '?'}token=${typeof window !== 'undefined' ? localStorage.getItem(config.auth.tokenKeys.accessToken) || '' : ''}`}
+                          className="w-full h-[600px] border-0"
+                          title="Original Resume Preview"
+                        />
+                      </div>
+                    ) : (
+                      <div className="p-4 bg-background border rounded-md">
+                        <p className="text-sm text-muted-foreground">
+                          {resume.parsed_content ? (
+                            <div className="space-y-2">
+                              <p className="font-medium">Original Content:</p>
+                              <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-96">
+                                {typeof resume.parsed_content === 'string' 
+                                  ? resume.parsed_content 
+                                  : JSON.stringify(resume.parsed_content, null, 2)}
+                              </pre>
+                            </div>
+                          ) : (
+                            'Original resume file not available for preview.'
+                          )}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </TabsContent>

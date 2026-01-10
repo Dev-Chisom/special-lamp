@@ -28,11 +28,14 @@ import {
   mapIngestedJobToListing,
 } from "./utils"
 import type { JobApplication, JobListing, JobStatus } from "./types"
+import type { IngestedJobResponse } from "@/services/job.service"
 
 export function JobTrackerInterface() {
   const [jobs, setJobs] = useState<JobApplication[]>([])
   const [jobListings, setJobListings] = useState<JobListing[]>([])
+  const [ingestedJobs, setIngestedJobs] = useState<IngestedJobResponse[]>([]) // Store original ingested jobs
   const [selectedJob, setSelectedJob] = useState<JobApplication | null>(null)
+  const [selectedIngestedJob, setSelectedIngestedJob] = useState<IngestedJobResponse | null>(null) // Store selected ingested job
   const [isDetailViewOpen, setIsDetailViewOpen] = useState(false)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
@@ -105,11 +108,12 @@ export function JobTrackerInterface() {
         console.log("[JobTracker] Job listings API response:", response)
 
         if (isMounted) {
-          const mappedListings = (response.items || []).map(
-            mapIngestedJobToListing
-          )
+          const items = response.items || []
+          const mappedListings = items.map(mapIngestedJobToListing)
           console.log("[JobTracker] Mapped job listings:", mappedListings.length)
           setJobListings(mappedListings)
+          // Store original ingested jobs for reference
+          setIngestedJobs(items)
           hasFetchedListingsRef.current = true
         }
       } catch (error: any) {
@@ -321,21 +325,26 @@ export function JobTrackerInterface() {
 
   const handleSaveJob = async (listing: JobListing) => {
     try {
-      // Find the original ingested job if available
-      const ingestedJobId = listing.id.startsWith("listing-")
-        ? undefined
-        : listing.id
-
-      const createRequest = {
-        title: listing.title,
-        company: listing.company,
-        location: listing.location,
-        job_type: "full_time", // Default
-        description: listing.description || "",
-        requirements: "",
-        source: "platform",
-        external_url: listing.url,
-        ingested_job_id: ingestedJobId,
+      // Find the original ingested job
+      const ingestedJob = ingestedJobs.find((j) => j.id === listing.id)
+      
+      let createRequest
+      if (ingestedJob) {
+        // Use the helper function to convert ingested job to create request
+        createRequest = jobService.ingestedJobToCreateRequest(ingestedJob)
+      } else {
+        // Fallback: construct from listing data
+        createRequest = {
+          title: listing.title,
+          company: listing.company,
+          location: listing.location,
+          job_type: "full_time", // Default
+          description: listing.description || "",
+          requirements: "",
+          source: "platform",
+          external_url: listing.url,
+          ingested_job_id: listing.id, // Use listing ID as ingested_job_id
+        }
       }
 
       const savedJob = await jobService.saveJob(createRequest)
@@ -345,11 +354,18 @@ export function JobTrackerInterface() {
       toast.success("Job saved to tracker")
     } catch (error: any) {
       console.error("Failed to save job:", error)
-      toast.error(error?.message || "Failed to save job. Please try again.")
+      if (error?.statusCode === 409 || error?.message?.includes('already') || error?.message?.includes('duplicate')) {
+        toast.error("Job already in your tracker")
+      } else {
+        toast.error(error?.message || "Failed to save job. Please try again.")
+      }
     }
   }
 
   const handleJobListingClick = (listing: JobListing) => {
+    // Find the original ingested job
+    const ingestedJob = ingestedJobs.find((j) => j.id === listing.id)
+    
     // Convert JobListing to JobApplication for display
     const jobApplication: JobApplication = {
       id: `listing-${listing.id}`,
@@ -361,6 +377,8 @@ export function JobTrackerInterface() {
       jobUrl: listing.url,
       jobDescription:
         listing.description ||
+        ingestedJob?.description_snippet ||
+        ingestedJob?.job_description ||
         `Join our team at ${listing.company} as a ${listing.title}. This is an exciting opportunity to work in ${listing.location}.
 
 About This Opportunity
@@ -381,6 +399,7 @@ Requirements
 • Ability to work independently and as part of a team`,
     }
     setSelectedJob(jobApplication)
+    setSelectedIngestedJob(ingestedJob || null)
     setIsDetailViewOpen(true)
   }
 
@@ -517,7 +536,12 @@ Requirements
       <JobDetailView
         job={selectedJob}
         open={isDetailViewOpen}
-        onOpenChange={setIsDetailViewOpen}
+        onOpenChange={(open) => {
+          setIsDetailViewOpen(open)
+          if (!open) {
+            setSelectedIngestedJob(null)
+          }
+        }}
         onSave={handleSave}
         onDelete={handleDelete}
         isReadOnly={false}
@@ -534,6 +558,7 @@ Requirements
               }
             : undefined
         }
+        ingestedJob={selectedIngestedJob}
       />
         </div>
   )

@@ -2,13 +2,17 @@
 
 import { useParams, useRouter } from "next/navigation"
 import { useApplicationStatus } from "@/hooks/useApplicationStatus"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ArrowLeft, AlertTriangle, CheckCircle2, RefreshCw } from "lucide-react"
-import type { ApplicationRun } from "@/services/application.service"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { ArrowLeft, AlertTriangle, CheckCircle2, RefreshCw, Clock, CheckCircle, XCircle, Loader2 } from "lucide-react"
+import { applicationService, type ApplicationRun, type ApplicationLogEntry, type ApplicationStep, type ApplicationEvent } from "@/services/application.service"
+import { toast } from "sonner"
 
 // Status badge colors and text
 function getStatusBadgeColor(status: ApplicationRun['status']): string {
@@ -41,6 +45,10 @@ export default function ApplicationRunPage() {
   const params = useParams()
   const router = useRouter()
   const applicationId = params?.id as string
+  const [logs, setLogs] = useState<ApplicationLogEntry[]>([])
+  const [events, setEvents] = useState<ApplicationEvent[]>([])
+  const [isLoadingLogs, setIsLoadingLogs] = useState(false)
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false)
 
   const {
     status: application,
@@ -54,14 +62,59 @@ export default function ApplicationRunPage() {
     applicationId: applicationId || '',
     onStatusUpdate: (updatedStatus) => {
       console.log('Status updated:', updatedStatus)
+      // Update logs if they're included in the status response
+      if (updatedStatus.log_entries && updatedStatus.log_entries.length > 0) {
+        setLogs(updatedStatus.log_entries)
+      }
     },
     onError: (err) => {
       console.error('Status update error:', err)
+      toast.error(err.message || 'Failed to update application status')
     },
     onComplete: (finalStatus) => {
       console.log('Application completed:', finalStatus)
+      toast.success('Application process completed')
     }
   })
+
+  // Fetch logs and events separately
+  useEffect(() => {
+    if (!applicationId) return
+
+    const fetchLogsAndEvents = async () => {
+      // Fetch logs
+      setIsLoadingLogs(true)
+      try {
+        const fetchedLogs = await applicationService.getApplicationLogs(applicationId)
+        setLogs(fetchedLogs)
+      } catch (error: any) {
+        console.error('Failed to fetch logs:', error)
+        // Use logs from application status if available
+        if (application?.log_entries) {
+          setLogs(application.log_entries)
+        }
+      } finally {
+        setIsLoadingLogs(false)
+      }
+
+      // Fetch events
+      setIsLoadingEvents(true)
+      try {
+        const fetchedEvents = await applicationService.getApplicationEvents(applicationId)
+        setEvents(fetchedEvents)
+      } catch (error: any) {
+        console.error('Failed to fetch events:', error)
+        // Events are optional, so don't fail if they're not available
+      } finally {
+        setIsLoadingEvents(false)
+      }
+    }
+
+    // Fetch logs and events on mount and when status changes
+    if (application) {
+      fetchLogsAndEvents()
+    }
+  }, [applicationId, application?.status])
 
   if (!applicationId) {
     return (
@@ -294,7 +347,395 @@ export default function ApplicationRunPage() {
         </CardContent>
       </Card>
 
-      {/* TODO: Add Application Steps, Log, and User Action Modal components */}
+      {/* Application Steps and Logs */}
+      {(application.current_step || logs.length > 0) && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Application Details</CardTitle>
+            <CardDescription>
+              Track the progress and view logs of your application
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="steps" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="steps">Steps</TabsTrigger>
+                <TabsTrigger value="logs">Logs</TabsTrigger>
+                <TabsTrigger value="timeline">Timeline</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="steps" className="mt-4">
+                <ApplicationSteps 
+                  currentStep={application.current_step} 
+                  stepsCompleted={application.steps_completed || 0}
+                  totalSteps={application.total_steps || 0}
+                  status={application.status}
+                />
+              </TabsContent>
+
+              <TabsContent value="logs" className="mt-4">
+                <ApplicationLogs 
+                  logs={logs} 
+                  isLoading={isLoadingLogs}
+                />
+              </TabsContent>
+
+              <TabsContent value="timeline" className="mt-4">
+                <ApplicationTimeline 
+                  events={events} 
+                  isLoading={isLoadingEvents}
+                />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      )}
     </div>
+  )
+}
+
+// Application Steps Component
+function ApplicationSteps({
+  currentStep,
+  stepsCompleted,
+  totalSteps,
+  status,
+}: {
+  currentStep?: ApplicationStep | null
+  stepsCompleted: number
+  totalSteps: number
+  status: ApplicationRun['status']
+}) {
+  const allSteps: ApplicationStep[] = [
+    'initializing',
+    'filling_form',
+    'uploading_resume',
+    'answering_questions',
+    'verification_required',
+    'submitting',
+    'completed'
+  ]
+
+  const getStepStatus = (step: ApplicationStep): 'completed' | 'current' | 'pending' => {
+    const stepIndex = allSteps.indexOf(step)
+    const currentIndex = currentStep ? allSteps.indexOf(currentStep) : -1
+    
+    if (stepIndex < stepsCompleted) return 'completed'
+    if (stepIndex === currentIndex && status !== 'submitted' && status !== 'failed' && status !== 'aborted') return 'current'
+    return 'pending'
+  }
+
+  const formatStepName = (step: ApplicationStep): string => {
+    return step.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+  }
+
+  return (
+    <div className="space-y-3">
+      {allSteps.map((step, index) => {
+        const stepStatus = getStepStatus(step)
+        const isActive = stepStatus === 'current'
+        const isCompleted = stepStatus === 'completed'
+        const isPending = stepStatus === 'pending'
+
+        return (
+          <div
+            key={step}
+            className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+              isActive
+                ? 'bg-primary/5 border-primary/20'
+                : isCompleted
+                ? 'bg-muted/50 border-border'
+                : 'bg-background border-border/50 opacity-60'
+            }`}
+          >
+            <div className="flex-shrink-0">
+              {isCompleted ? (
+                <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+                  <CheckCircle className="h-5 w-5 text-white" />
+                </div>
+              ) : isActive ? (
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                  <Loader2 className="h-5 w-5 text-white animate-spin" />
+                </div>
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-muted border-2 border-border flex items-center justify-center">
+                  <span className="text-xs font-medium text-muted-foreground">{index + 1}</span>
+                </div>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={`text-sm font-medium ${isActive ? 'text-primary' : isCompleted ? 'text-foreground' : 'text-muted-foreground'}`}>
+                {formatStepName(step)}
+              </p>
+              {isActive && (
+                <p className="text-xs text-muted-foreground mt-0.5">In progress...</p>
+              )}
+            </div>
+            {isCompleted && (
+              <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+            )}
+            {isActive && (
+              <Badge variant="default" className="flex-shrink-0">
+                Current
+              </Badge>
+            )}
+          </div>
+        )
+      })}
+      
+      {status === 'submitted' && (
+        <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+            <p className="text-sm font-medium text-green-800 dark:text-green-200">
+              All steps completed successfully!
+            </p>
+          </div>
+        </div>
+      )}
+      
+      {(status === 'failed' || status === 'aborted') && (
+        <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <div className="flex items-center gap-2">
+            <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+            <p className="text-sm font-medium text-red-800 dark:text-red-200">
+              Application process {status === 'failed' ? 'failed' : 'was aborted'}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Application Logs Component
+function ApplicationLogs({
+  logs,
+  isLoading,
+}: {
+  logs: ApplicationLogEntry[]
+  isLoading: boolean
+}) {
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-16 w-full" />
+        ))}
+      </div>
+    )
+  }
+
+  if (logs.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
+        <p className="text-sm">No logs available yet</p>
+      </div>
+    )
+  }
+
+  const getLogIcon = (log: ApplicationLogEntry) => {
+    // Use step_type if available (new format), otherwise fall back to level (old format)
+    const logType = log.step_type || log.level
+    switch (logType) {
+      case 'success':
+      case 'extraction':
+        return <CheckCircle className="h-4 w-4 text-green-500" />
+      case 'error':
+        return <XCircle className="h-4 w-4 text-red-500" />
+      case 'warning':
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />
+      case 'info':
+      case 'navigation':
+        return <Clock className="h-4 w-4 text-blue-500" />
+      case 'captcha':
+      case 'consent':
+      case 'input':
+        return <Loader2 className="h-4 w-4 text-orange-500" />
+      default:
+        return <Clock className="h-4 w-4 text-muted-foreground" />
+    }
+  }
+
+  const getLogColor = (log: ApplicationLogEntry) => {
+    // Use step_type if available (new format), otherwise fall back to level (old format)
+    const logType = log.step_type || log.level
+    switch (logType) {
+      case 'success':
+      case 'extraction':
+        return 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10'
+      case 'error':
+        return 'border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10'
+      case 'warning':
+        return 'border-yellow-200 dark:border-yellow-800 bg-yellow-50/50 dark:bg-yellow-900/10'
+      case 'info':
+      case 'navigation':
+        return 'border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-900/10'
+      case 'captcha':
+      case 'consent':
+      case 'input':
+        return 'border-orange-200 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-900/10'
+      default:
+        return 'border-border bg-muted/30'
+    }
+  }
+
+  return (
+    <ScrollArea className="h-[400px] w-full">
+      <div className="space-y-2 pr-4">
+        {logs.map((log) => (
+          <div
+            key={log.id}
+            className={`flex items-start gap-3 p-3 rounded-lg border ${getLogColor(log.level)}`}
+          >
+            <div className="flex-shrink-0 mt-0.5">
+              {getLogIcon(log)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <p className="text-sm font-medium text-foreground">
+                  {log.message}
+                </p>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                  {new Date(log.timestamp).toLocaleTimeString()}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {(log.step_name || log.step) && (
+                  <Badge variant="outline" className="text-xs">
+                    {log.step_name || log.step?.replace(/_/g, ' ')}
+                  </Badge>
+                )}
+                {log.step_type && (
+                  <Badge variant="secondary" className="text-xs capitalize">
+                    {log.step_type.replace(/_/g, ' ')}
+                  </Badge>
+                )}
+              </div>
+              {log.screenshot_url && (
+                <div className="mt-2">
+                  <a
+                    href={`${log.screenshot_url}?token=${typeof window !== 'undefined' ? localStorage.getItem('pathforge_access_token') || '' : ''}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline"
+                  >
+                    View Screenshot
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </ScrollArea>
+  )
+}
+
+// Application Timeline Component
+function ApplicationTimeline({
+  events,
+  isLoading,
+}: {
+  events: ApplicationEvent[]
+  isLoading: boolean
+}) {
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-16 w-full" />
+        ))}
+      </div>
+    )
+  }
+
+  if (events.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
+        <p className="text-sm">No events available yet</p>
+      </div>
+    )
+  }
+
+  const getEventIcon = (eventType: string) => {
+    switch (eventType) {
+      case 'STARTED':
+        return <CheckCircle className="h-4 w-4 text-blue-500" />
+      case 'STEP_COMPLETED':
+        return <CheckCircle2 className="h-4 w-4 text-green-500" />
+      case 'PAUSED':
+      case 'WAITING_FOR_USER':
+        return <AlertTriangle className="h-4 w-4 text-orange-500" />
+      case 'ERROR':
+        return <XCircle className="h-4 w-4 text-red-500" />
+      case 'COMPLETED':
+      case 'SUBMITTED':
+        return <CheckCircle2 className="h-4 w-4 text-green-500" />
+      default:
+        return <Clock className="h-4 w-4 text-muted-foreground" />
+    }
+  }
+
+  const getEventColor = (eventType: string) => {
+    switch (eventType) {
+      case 'STARTED':
+        return 'border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-900/10'
+      case 'STEP_COMPLETED':
+        return 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10'
+      case 'PAUSED':
+      case 'WAITING_FOR_USER':
+        return 'border-orange-200 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-900/10'
+      case 'ERROR':
+        return 'border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10'
+      case 'COMPLETED':
+      case 'SUBMITTED':
+        return 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10'
+      default:
+        return 'border-border bg-muted/30'
+    }
+  }
+
+  const formatEventType = (eventType: string): string => {
+    return eventType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+  }
+
+  return (
+    <ScrollArea className="h-[400px] w-full">
+      <div className="space-y-2 pr-4">
+        {events.map((event, index) => (
+          <div
+            key={event.id}
+            className={`flex items-start gap-3 p-3 rounded-lg border ${getEventColor(event.event_type)}`}
+          >
+            <div className="flex-shrink-0 mt-0.5">
+              {getEventIcon(event.event_type)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <Badge variant="outline" className="text-xs">
+                  {formatEventType(event.event_type)}
+                </Badge>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                  {new Date(event.timestamp).toLocaleTimeString()}
+                </span>
+              </div>
+              {event.event_data && Object.keys(event.event_data).length > 0 && (
+                <div className="mt-2 p-2 bg-background/50 rounded text-xs font-mono overflow-auto max-h-32">
+                  <pre className="whitespace-pre-wrap break-words">
+                    {JSON.stringify(event.event_data, null, 2)}
+                  </pre>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                {new Date(event.timestamp).toLocaleString()}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </ScrollArea>
   )
 }

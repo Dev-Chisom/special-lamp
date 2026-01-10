@@ -53,10 +53,24 @@ export interface ApplicationRun {
 
 export interface ApplicationLogEntry {
   id: string;
-  timestamp: string;
-  level: 'info' | 'warning' | 'error' | 'success';
+  application_run_id?: string;
+  step_name?: string;
+  step_type?: 'captcha' | 'consent' | 'input' | 'navigation' | 'extraction' | 'info' | 'warning';
   message: string;
+  screenshot_url?: string;
+  step_metadata?: Record<string, any>;
+  timestamp: string;
+  // Legacy fields for backward compatibility
+  level?: 'info' | 'warning' | 'error' | 'success';
   step?: ApplicationStep;
+}
+
+export interface ApplicationEvent {
+  id: string;
+  application_run_id: string;
+  event_type: string; // e.g., "STARTED", "PAUSED", "STEP_COMPLETED", "USER_ACTION_COMPLETED", "ERROR", "COMPLETED"
+  event_data?: Record<string, any>;
+  timestamp: string;
 }
 
 export interface StartApplicationRequest {
@@ -181,8 +195,15 @@ class ApplicationService {
    * Confirm user action (for WAITING_FOR_USER state)
    * Endpoint: POST /api/v1/applications/{application_id}/user-action-complete
    */
-  async confirmUserAction(applicationId: string): Promise<ApplicationRun> {
-    return apiClient.post(`/applications/${applicationId}/user-action-complete`);
+  async confirmUserAction(
+    applicationId: string,
+    actionType: string = 'user_confirmation',
+    actionData: Record<string, any> = {}
+  ): Promise<ApplicationRun> {
+    return apiClient.post<ApplicationRun>(`/applications/${applicationId}/user-action-complete`, {
+      action_type: actionType,
+      action_data: actionData,
+    });
   }
 
   /**

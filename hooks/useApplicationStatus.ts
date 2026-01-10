@@ -234,11 +234,17 @@ export function useApplicationStatus(options: UseApplicationStatusOptions) {
    * This should be called after user completes CAPTCHA/consent
    */
   const resumePolling = useCallback(async () => {
-    if (!applicationId) return
+    if (!applicationId || !status) return
     
     try {
+      // Get action type from application status
+      const actionType = status.user_action_required || 'user_confirmation'
+      const actionData: Record<string, any> = {
+        confirmed: true,
+      }
+      
       // Notify backend that user action is complete
-      await applicationService.confirmUserAction(applicationId)
+      await applicationService.confirmUserAction(applicationId, actionType, actionData)
       
       // Reset state
       isPollingRef.current = true
@@ -256,7 +262,7 @@ export function useApplicationStatus(options: UseApplicationStatusOptions) {
       setError(error)
       onErrorRef.current?.(error)
     }
-  }, [applicationId, fetchStatus, cleanup])
+  }, [applicationId, status, fetchStatus, cleanup])
 
   /**
    * Stop polling manually (for cleanup)
