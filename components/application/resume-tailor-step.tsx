@@ -90,6 +90,12 @@ export function ResumeTailorStep({
         isBuiltResume
       )
       
+      // Validate that we got a valid response
+      if (!tailored || (tailored as any).detail) {
+        // If response contains an error detail, treat it as an error
+        throw new Error((tailored as any).detail || "Failed to tailor resume: Invalid response")
+      }
+      
       // Set the tailored resume (convert ResumeBuild to Resume if needed for type compatibility)
       setTailoredResume(tailored as Resume)
       toast.success("Resume tailored successfully!")
@@ -197,20 +203,24 @@ export function ResumeTailorStep({
                       </div>
                     ) : (
                       <div className="p-4 bg-background border rounded-md">
-                        <p className="text-sm text-muted-foreground">
-                          {(tailoredResume as any).parsed_content ? (
-                            <div className="space-y-2">
-                              <p className="font-medium">Tailored Content:</p>
-                              <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-96">
+                        <div className="space-y-3">
+                          <p className="text-sm font-medium text-foreground">
+                            Tailored Resume Ready
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Your resume has been optimized for this position. The tailored version will be used when you submit your application.
+                          </p>
+                          {(tailoredResume as any).parsed_content && (
+                            <div className="space-y-2 mt-4">
+                              <p className="text-sm font-medium">Preview of tailored content:</p>
+                              <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-96 border">
                                 {typeof (tailoredResume as any).parsed_content === 'string' 
                                   ? (tailoredResume as any).parsed_content 
                                   : JSON.stringify((tailoredResume as any).parsed_content, null, 2)}
                               </pre>
                             </div>
-                          ) : (
-                            'Resume has been tailored. The optimized version will be used for this application.'
                           )}
-                        </p>
+                        </div>
                       </div>
                     )}
                   </div>

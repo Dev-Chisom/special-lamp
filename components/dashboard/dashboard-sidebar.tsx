@@ -12,7 +12,7 @@ import {
   FileEdit,
   FolderOpen,
   History,
-  Chrome,
+  // Chrome, // TEMPORARILY DISABLED
   Target,
   ChevronLeft,
   ChevronRight,
@@ -28,7 +28,7 @@ const navItems = [
   { name: "Resume Builder", href: "/dashboard/resume-builder", icon: FileEdit },
   { name: "Resume Manager", href: "/dashboard/resume-manager", icon: FolderOpen },
   { name: "Scan History", href: "/dashboard/scan-history", icon: History },
-  { name: "Chrome Extension", href: "/dashboard/extension", icon: Chrome },
+  // { name: "Chrome Extension", href: "/dashboard/extension", icon: Chrome }, // TEMPORARILY DISABLED
   { name: "Settings", href: "/dashboard/settings/auto-apply", icon: Settings },
 ]
 

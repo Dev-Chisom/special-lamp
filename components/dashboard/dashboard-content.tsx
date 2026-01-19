@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useAuthStore } from "@/store/auth.store"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -30,6 +30,7 @@ import { toast } from "sonner"
 import { dashboardService, type DashboardResponse } from "@/services/dashboard.service"
 import { resumeService, type CombinedResumeItem } from "@/services/resume.service"
 import { jobService } from "@/services/job.service"
+import { applicationService } from "@/services/application.service"
 
 export function DashboardContent() {
   const { user } = useAuthStore()
@@ -43,18 +44,43 @@ export function DashboardContent() {
   const [isLoadingSavedJobs, setIsLoadingSavedJobs] = useState(false)
   const [appliedJobs, setAppliedJobs] = useState<any[]>([])
   const [isLoadingAppliedJobs, setIsLoadingAppliedJobs] = useState(false)
+  const [applicationStats, setApplicationStats] = useState<{
+    total: number
+    successful: number
+    failed: number
+    pending: number
+  } | null>(null)
+  const hasFetchedAnalyticsRef = useRef(false)
 
-  // Fetch dashboard data
+  // Fetch dashboard data and application stats
   useEffect(() => {
+    // Prevent duplicate calls (React StrictMode in development causes double render)
+    if (hasFetchedAnalyticsRef.current) {
+      return
+    }
+
+    hasFetchedAnalyticsRef.current = true
+
     const fetchDashboard = async () => {
       setIsLoading(true)
       try {
-        const data = await dashboardService.getDashboard({
-          recommended_jobs_limit: 10,
-          recent_activity_limit: 10,
-          applications_limit: 10,
-        })
+        const [data, stats] = await Promise.all([
+          dashboardService.getDashboard({
+            recommended_jobs_limit: 10,
+            recent_activity_limit: 10,
+            applications_limit: 10,
+          }),
+          applicationService.getAnalytics().catch(() => null), // Don't fail if analytics fails
+        ])
         setDashboardData(data)
+        if (stats) {
+          setApplicationStats({
+            total: stats.total_applications,
+            successful: stats.successful_applications,
+            failed: stats.failed_applications,
+            pending: stats.pending_applications,
+          })
+        }
       } catch (error: any) {
         console.error("Failed to fetch dashboard data:", error)
         toast.error(error?.message || "Failed to load dashboard")
@@ -138,7 +164,7 @@ export function DashboardContent() {
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         {/* Left Sidebar */}
-        <div className="xl:col-span-4 space-y-4 sm:space-y-6">
+        <div className="xl:col-span-4 space-y-4 sm:space-y-6 order-2 xl:order-1">
           {/* ATS Score Card */}
           <Card className="relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10" />
@@ -283,23 +309,75 @@ export function DashboardContent() {
         </div>
 
         {/* Main Content Area */}
-        <div className="xl:col-span-8 space-y-6">
-          {/* Welcome Banner */}
+        <div className="xl:col-span-8 space-y-6 order-1 xl:order-2">
+          {/* Application Analytics Card */}
           <Card className="relative overflow-hidden">
             <div className="absolute inset-0 opacity-5">
               <div className="absolute inset-0 bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] bg-[size:14px_24px]" />
             </div>
             <CardContent className="relative p-8 sm:p-8">
-              <h1 className="text-3xl sm:text-3xl font-bold mb-2">
-                Welcome back, {user?.full_name || user?.email?.split("@")[0] || "User"}
-              </h1>
-              <p className="text-muted-foreground mb-6 sm:text-base">
-                {dashboardData && dashboardData.recommended_jobs.length > 0 ? (
-                  `You have ${dashboardData.recommended_jobs.length} job recommendation${dashboardData.recommended_jobs.length !== 1 ? 's' : ''}.`
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {applicationStats && applicationStats.total > 0 ? (
+                  <>
+                    <div className="flex flex-col">
+                      <div className="text-2xl font-bold text-primary">
+                        {applicationStats.total}
+                      </div>
+                      <div className="text-xs sm:text-sm text-muted-foreground">
+                        Total Applications
+                      </div>
+                    </div>
+                    <div className="flex flex-col">
+                      <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                        {applicationStats.successful}
+                      </div>
+                      <div className="text-xs sm:text-sm text-muted-foreground">
+                        Successful
+                      </div>
+                    </div>
+                    <div className="flex flex-col">
+                      <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                        {applicationStats.failed}
+                      </div>
+                      <div className="text-xs sm:text-sm text-muted-foreground">
+                        Failed
+                      </div>
+                    </div>
+                    <div className="flex flex-col">
+                      <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                        {applicationStats.pending}
+                      </div>
+                      <div className="text-xs sm:text-sm text-muted-foreground">
+                        Pending
+                      </div>
+                    </div>
+                  </>
+                ) : appliedJobs.length > 0 ? (
+                  <div className="col-span-2 sm:col-span-4 flex flex-col">
+                    <div className="text-2xl font-bold text-primary">
+                      {appliedJobs.length}
+                    </div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">
+                      Applied Job{appliedJobs.length !== 1 ? 's' : ''}
+                    </div>
+                  </div>
+                ) : dashboardData?.recommended_jobs.length ? (
+                  <div className="col-span-2 sm:col-span-4 flex flex-col">
+                    <div className="text-2xl font-bold text-primary">
+                      {dashboardData.recommended_jobs.length}
+                    </div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">
+                      Job Recommendation{dashboardData.recommended_jobs.length !== 1 ? 's' : ''}
+                    </div>
+                  </div>
                 ) : (
-                  "Let's find your dream job today."
+                  <div className="col-span-2 sm:col-span-4 text-muted-foreground text-sm">
+                    Let's find your dream job today.
+                  </div>
                 )}
-              </p>
+              </div>
+              
               <div className="flex gap-3 sm:flex-row">
                 <Link href="/dashboard/find-jobs" className="flex-1 sm:flex-none">
                   <Button size="lg" className="w-full">
@@ -703,10 +781,28 @@ function ResumeCard({
 
   const getResumeName = (resume: CombinedResumeItem): string => {
     if (resume.type === 'file') {
-      return resume.title || resume.file_name || 'Untitled Resume'
+      const name = resume.title || resume.file_name || 'Untitled Resume'
+      // Clean up filename: remove double extensions and file extensions for display
+      return cleanFilename(name)
     } else {
       return resume.name || 'Untitled Resume'
     }
+  }
+
+  // Clean filename for display - remove file extensions and fix double extensions
+  const cleanFilename = (filename: string): string => {
+    if (!filename) return filename
+    
+    // Remove file extensions (.pdf, .docx, etc.)
+    // Handle double extensions like .pdf.pdf
+    let cleaned = filename
+      .replace(/\.pdf\.pdf$/i, '') // Remove double .pdf.pdf
+      .replace(/\.pdf$/i, '') // Remove .pdf
+      .replace(/\.docx$/i, '') // Remove .docx
+      .replace(/\.doc$/i, '') // Remove .doc
+      .trim()
+    
+    return cleaned || filename // Fallback to original if empty after cleaning
   }
 
   const handleOpen = (e: React.MouseEvent) => {

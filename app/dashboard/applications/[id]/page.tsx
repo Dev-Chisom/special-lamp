@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ArrowLeft, AlertTriangle, CheckCircle2, RefreshCw, Clock, CheckCircle, XCircle, Loader2 } from "lucide-react"
 import { applicationService, type ApplicationRun, type ApplicationLogEntry, type ApplicationStep, type ApplicationEvent } from "@/services/application.service"
+import { ApplicationReviewModal } from "@/components/application/application-review-modal"
 import { toast } from "sonner"
 
 // Status badge colors and text
@@ -49,6 +50,7 @@ export default function ApplicationRunPage() {
   const [events, setEvents] = useState<ApplicationEvent[]>([])
   const [isLoadingLogs, setIsLoadingLogs] = useState(false)
   const [isLoadingEvents, setIsLoadingEvents] = useState(false)
+  const [showReviewModal, setShowReviewModal] = useState(false)
 
   const {
     status: application,
@@ -65,6 +67,10 @@ export default function ApplicationRunPage() {
       // Update logs if they're included in the status response
       if (updatedStatus.log_entries && updatedStatus.log_entries.length > 0) {
         setLogs(updatedStatus.log_entries)
+      }
+      // Show review modal if status is waiting_for_user and it's a review action
+      if (updatedStatus.status === 'waiting_for_user' && isReviewAction(updatedStatus.user_action_required)) {
+        setShowReviewModal(true)
       }
     },
     onError: (err) => {
@@ -273,7 +279,7 @@ export default function ApplicationRunPage() {
             )}
 
             {/* User Action Required (WAITING_FOR_USER state) */}
-            {isWaitingForUser && application.user_action_required && (
+            {isWaitingForUser && application.user_action_required && !isReviewAction(application.user_action_required) && (
               <Alert className="bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800">
                 <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                 <AlertTitle className="text-orange-800 dark:text-orange-200">Action Required</AlertTitle>
@@ -308,6 +314,27 @@ export default function ApplicationRunPage() {
                     onClick={resumePolling}
                   >
                     Resume Application
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Review Required Alert (shows when review modal is closed but status is still waiting) */}
+            {isWaitingForUser && application.user_action_required && isReviewAction(application.user_action_required) && !showReviewModal && (
+              <Alert className="bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800">
+                <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                <AlertTitle className="text-orange-800 dark:text-orange-200">Review Required</AlertTitle>
+                <AlertDescription className="text-orange-700 dark:text-orange-300 mt-2 space-y-3">
+                  <p>
+                    The application process has been paused for your review. Please review the application details before it's submitted.
+                  </p>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="w-fit"
+                    onClick={() => setShowReviewModal(true)}
+                  >
+                    Review Application
                   </Button>
                 </AlertDescription>
               </Alert>
@@ -390,8 +417,34 @@ export default function ApplicationRunPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Application Review Modal */}
+      {application && (
+        <ApplicationReviewModal
+          application={application}
+          open={showReviewModal}
+          onApprove={() => {
+            setShowReviewModal(false)
+            // Resume polling will be triggered by the modal
+            resumePolling()
+          }}
+          onReject={() => {
+            setShowReviewModal(false)
+            // Status will update to aborted/failed after rejection
+            refresh()
+          }}
+          onClose={() => setShowReviewModal(false)}
+        />
+      )}
     </div>
   )
+}
+
+// Helper function to check if user_action_required is a review action
+function isReviewAction(actionType: string | null | undefined): boolean {
+  if (!actionType) return false
+  const reviewActions = ['review', 'review_required', 'review_before_submission', 'user_review']
+  return reviewActions.some(action => actionType.toLowerCase().includes(action.toLowerCase()))
 }
 
 // Application Steps Component

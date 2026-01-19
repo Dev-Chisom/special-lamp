@@ -116,7 +116,7 @@ export function PricingPlans() {
                 <Feature>Everything in Weekly</Feature>
                 <Feature>Better value (save 40%)</Feature>
                 <Feature>Saved resume versions</Feature>
-                <Feature>Multi-language support</Feature>
+                <Feature>Auto Apply to matching jobs</Feature>
                 <Feature>Priority support</Feature>
                 <Feature>Advanced analytics</Feature>
               </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -61,11 +61,7 @@ export function AutoApplyPreferences() {
   const [newJobTitle, setNewJobTitle] = useState("")
   const [newLocation, setNewLocation] = useState("")
   const [newSkill, setNewSkill] = useState("")
-
-  // Load preferences
-  useEffect(() => {
-    loadPreferences()
-  }, [])
+  const hasFetchedPreferencesRef = useRef(false)
 
   const loadPreferences = async () => {
     setIsLoading(true)
@@ -81,6 +77,17 @@ export function AutoApplyPreferences() {
       setIsLoading(false)
     }
   }
+
+  // Load preferences on mount
+  useEffect(() => {
+    // Prevent duplicate calls (React StrictMode in development causes double render)
+    if (hasFetchedPreferencesRef.current) {
+      return
+    }
+
+    hasFetchedPreferencesRef.current = true
+    loadPreferences()
+  }, [])
 
   const validatePreferences = (): boolean => {
     const newErrors: Record<string, string> = {}

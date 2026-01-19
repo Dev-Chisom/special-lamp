@@ -68,6 +68,7 @@ export interface AutoAppliedJob {
   confidence_score: number | null
   resume_id: string
   resume_name: string
+  error_reason: string | null // Error message for failed/aborted applications
   created_at: string
   finished_at: string | null
 }

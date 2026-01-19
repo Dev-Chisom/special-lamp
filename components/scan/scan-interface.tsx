@@ -27,28 +27,10 @@ import {
 } from "lucide-react"
 import { motion } from "framer-motion"
 import Link from "next/link"
+import { scanService, type ScanResult } from "@/services/scan.service"
+import { toast } from "sonner"
 
 type ScanState = "idle" | "uploading" | "scanning" | "complete"
-
-interface ScanResult {
-  overallScore: number
-  breakdown: {
-    atsScore: number
-    semanticScore: number
-    formatScore: number
-    experienceMatch: number
-    educationMatch: number
-  }
-  strengths: string[]
-  weaknesses: string[]
-  missingKeywords: string[]
-  recommendations: Array<{
-    priority: "high" | "medium" | "low"
-    action: string
-    impact: string
-    section: string
-  }>
-}
 
 export function ScanInterface() {
   const [scanState, setScanState] = useState<ScanState>("idle")
@@ -56,85 +38,57 @@ export function ScanInterface() {
   const [jobDescription, setJobDescription] = useState("")
   const [resumeFile, setResumeFile] = useState<File | null>(null)
   const [scanResult, setScanResult] = useState<ScanResult | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const handleScan = async () => {
     if (!resumeFile || !jobDescription) return
 
     setScanState("scanning")
+    setProgress(0)
+    setError(null)
+    setScanResult(null)
 
-    // Simulate scanning progress
-    const stages = [
-      { progress: 20, duration: 500 },
-      { progress: 40, duration: 800 },
-      { progress: 60, duration: 1000 },
-      { progress: 80, duration: 700 },
-      { progress: 100, duration: 500 },
-    ]
+    try {
+      // Simulate progress updates while API call is in progress
+      const progressInterval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval)
+            return 90
+          }
+          return prev + 10
+        })
+      }, 300)
 
-    for (const stage of stages) {
-      await new Promise((resolve) => setTimeout(resolve, stage.duration))
-      setProgress(stage.progress)
+      // Call the real API
+      const result = await scanService.scanResume({
+        resume_file: resumeFile,
+        job_description: jobDescription,
+      })
+
+      clearInterval(progressInterval)
+      setProgress(100)
+
+      // Map backend response to UI format (if needed)
+      setScanResult(result)
+      setScanState("complete")
+      toast.success("Resume scanned successfully!")
+    } catch (err: any) {
+      setProgress(0)
+      setScanState("idle")
+      const errorMessage = err?.message || "Failed to scan resume. Please try again."
+      setError(errorMessage)
+      toast.error(errorMessage)
+      
+      // Handle specific error cases
+      if (err?.statusCode === 401) {
+        toast.error("Please sign in to scan your resume")
+      } else if (err?.statusCode === 404) {
+        toast.error("Resume not found. Please upload a resume first.")
+      } else if (err?.statusCode === 429) {
+        toast.error("Too many requests. Please try again later.")
+      }
     }
-
-    // Mock scan result
-    const mockResult: ScanResult = {
-      overallScore: 85,
-      breakdown: {
-        atsScore: 82,
-        semanticScore: 88,
-        formatScore: 90,
-        experienceMatch: 85,
-        educationMatch: 80,
-      },
-      strengths: [
-        "Strong technical skills alignment (React, Node.js, TypeScript)",
-        "Relevant experience level (5+ years)",
-        "Clear quantifiable achievements",
-        "Well-structured sections with consistent formatting",
-      ],
-      weaknesses: [
-        "Missing keywords: AWS, Docker, Kubernetes",
-        "Limited leadership experience mentioned",
-        "Could improve metrics in most recent role",
-        "No mention of CI/CD or DevOps practices",
-      ],
-      missingKeywords: ["AWS", "Docker", "Kubernetes", "CI/CD", "Microservices", "GraphQL"],
-      recommendations: [
-        {
-          priority: "high",
-          action: "Add AWS experience from Project X",
-          impact: "+8 points",
-          section: "skills",
-        },
-        {
-          priority: "high",
-          action: "Include Docker and Kubernetes from infrastructure work",
-          impact: "+6 points",
-          section: "experience",
-        },
-        {
-          priority: "medium",
-          action: "Quantify impact in most recent role with metrics",
-          impact: "+5 points",
-          section: "experience",
-        },
-        {
-          priority: "medium",
-          action: "Add CI/CD pipeline contributions",
-          impact: "+4 points",
-          section: "experience",
-        },
-        {
-          priority: "low",
-          action: "Mention team leadership or mentoring",
-          impact: "+3 points",
-          section: "experience",
-        },
-      ],
-    }
-
-    setScanResult(mockResult)
-    setScanState("complete")
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -224,9 +178,15 @@ export function ScanInterface() {
                   <p className="text-xs text-muted-foreground">Include the full job description for best results</p>
                 </div>
 
-                <Button onClick={handleScan} disabled={!resumeFile || !jobDescription} className="w-full" size="lg">
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+                <Button onClick={handleScan} disabled={!resumeFile || !jobDescription || scanState === "scanning"} className="w-full" size="lg">
                   <Sparkles className="mr-2 h-5 w-5" />
-                  Scan Resume
+                  {scanState === "scanning" ? "Scanning..." : "Scan Resume"}
                 </Button>
               </CardContent>
             </Card>

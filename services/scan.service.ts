@@ -11,16 +11,29 @@ export interface ScanRequest {
   job_description: string;
 }
 
+export interface RecommendationItem {
+  priority: "high" | "medium" | "low";
+  action: string;
+  impact: string;
+  section: string;
+}
+
 export interface ScanResult {
   id: string;
   resume_id?: string;
   job_description: string;
-  overall_score: number;
-  keyword_match_score: number;
-  formatting_score: number;
-  content_score: number;
-  missing_keywords: string[];
-  recommendations: string[];
+  overallScore: number;
+  breakdown: {
+    atsScore: number;
+    semanticScore: number;
+    formatScore: number;
+    experienceMatch: number;
+    educationMatch: number;
+  };
+  strengths: string[];
+  weaknesses: string[];
+  missingKeywords: string[];
+  recommendations: RecommendationItem[];
   created_at: string;
 }
 

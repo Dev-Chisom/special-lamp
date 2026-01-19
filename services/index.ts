@@ -11,6 +11,7 @@ export { scanService } from './scan.service';
 export { linkedinService } from './linkedin.service';
 export { jobService } from './job.service';
 export { applicationService } from './application.service';
+export { notificationService } from './notification.service';
 
 export type { ApiError, ApiClientError } from './api-client';
 export type {

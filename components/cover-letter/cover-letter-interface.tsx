@@ -116,10 +116,28 @@ export function CoverLetterInterface() {
 
   const getResumeName = (resume: CombinedResumeItem): string => {
     if (resume.type === 'file') {
-      return resume.title || resume.file_name || 'Untitled Resume'
+      const name = resume.title || resume.file_name || 'Untitled Resume'
+      // Clean up filename: remove double extensions and file extensions for display
+      return cleanFilename(name)
     } else {
       return resume.name || 'Untitled Resume'
     }
+  }
+
+  // Clean filename for display - remove file extensions and fix double extensions
+  const cleanFilename = (filename: string): string => {
+    if (!filename) return filename
+    
+    // Remove file extensions (.pdf, .docx, etc.)
+    // Handle double extensions like .pdf.pdf
+    let cleaned = filename
+      .replace(/\.pdf\.pdf$/i, '') // Remove double .pdf.pdf
+      .replace(/\.pdf$/i, '') // Remove .pdf
+      .replace(/\.docx$/i, '') // Remove .docx
+      .replace(/\.doc$/i, '') // Remove .doc
+      .trim()
+    
+    return cleaned || filename // Fallback to original if empty after cleaning
   }
 
   return (

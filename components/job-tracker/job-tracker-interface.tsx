@@ -53,9 +53,7 @@ export function JobTrackerInterface() {
       setIsLoadingJobs(true)
       setJobsError(null)
       try {
-        console.log("[JobTracker] Fetching jobs from API...")
         const backendJobs = await jobService.getJobs()
-        console.log("[JobTracker] API response:", backendJobs)
 
         if (isMounted) {
           // Handle both array and object with items property
@@ -63,7 +61,6 @@ export function JobTrackerInterface() {
             ? backendJobs
             : (backendJobs as any)?.items || []
           const mappedJobs = jobsArray.map(mapJobResponseToApplication)
-          console.log("[JobTracker] Mapped jobs:", mappedJobs.length, mappedJobs)
           setJobs(mappedJobs)
         }
       } catch (error: any) {
@@ -99,18 +96,15 @@ export function JobTrackerInterface() {
       setIsLoadingListings(true)
       setListingsError(null)
       try {
-        console.log("[JobTracker] Fetching job listings, query:", jobSearchQuery)
         const response = await jobService.searchJobs({
           query: jobSearchQuery || undefined,
           page: 1,
           page_size: 20,
         })
-        console.log("[JobTracker] Job listings API response:", response)
 
         if (isMounted) {
           const items = response.items || []
           const mappedListings = items.map(mapIngestedJobToListing)
-          console.log("[JobTracker] Mapped job listings:", mappedListings.length)
           setJobListings(mappedListings)
           // Store original ingested jobs for reference
           setIngestedJobs(items)

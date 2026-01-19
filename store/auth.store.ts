@@ -128,18 +128,14 @@ export const useAuthStore = create<AuthState>()(
         const state = get();
         const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
         if (!force && state.user && state.lastFetchTime && state.lastFetchTime > fiveMinutesAgo) {
-          console.log('[AuthStore] fetchCurrentUser: Using cached user data');
           return;
         }
 
-        console.log('[AuthStore] fetchCurrentUser: Starting...');
-        
         // Create the fetch promise and store it for deduplication
         const fetchPromise = (async () => {
           try {
             set({ isLoading: true, error: null });
             const user = await authService.getCurrentUser();
-            console.log('[AuthStore] fetchCurrentUser: Success', { user: user?.email });
             set({
               user,
               isAuthenticated: true,
@@ -148,7 +144,6 @@ export const useAuthStore = create<AuthState>()(
               lastFetchTime: Date.now(),
             });
           } catch (error: any) {
-            console.error('[AuthStore] fetchCurrentUser: Failed', { error: error.message });
             // If fetching user fails, user is not authenticated
             set({
               user: null,

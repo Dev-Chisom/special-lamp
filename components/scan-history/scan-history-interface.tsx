@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -23,9 +23,17 @@ export function ScanHistoryInterface() {
   })
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("all")
+  const hasFetchedHistoryRef = useRef(false)
 
   // Fetch scan history with statistics
   useEffect(() => {
+    // Prevent duplicate calls (React StrictMode in development causes double render)
+    if (hasFetchedHistoryRef.current) {
+      return
+    }
+
+    hasFetchedHistoryRef.current = true
+
     const fetchScanHistory = async () => {
       setIsLoading(true)
       try {

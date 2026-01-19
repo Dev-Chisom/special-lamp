@@ -3,7 +3,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Sparkles, Search, FileText, Wand2, MessageSquare, Brain, TrendingUp, Target } from "lucide-react"
+import { Sparkles, Search, FileText, Wand2, MessageSquare, Brain, TrendingUp, Target, Zap } from "lucide-react"
 
 export default function LandingPage() {
   return (
@@ -130,9 +130,9 @@ export default function LandingPage() {
             gradient="from-indigo-500 to-blue-500"
           />
           <FeatureCard
-            icon={<Brain className="h-6 w-6" />}
-            title="Multilingual Support"
-            description="Optimize resumes in multiple languages with our advanced translation and analysis engine"
+            icon={<Zap className="h-6 w-6" />}
+            title="Auto Apply"
+            description="Automatically apply to jobs that match your preferences, saving hours of application time"
             gradient="from-violet-500 to-purple-500"
           />
         </div>
@@ -222,7 +222,7 @@ export default function LandingPage() {
               "Everything in Weekly",
               "Better value (save 40%)",
               "Saved resume versions",
-              "Multi-language support",
+              "Auto Apply to matching jobs",
               "Priority support",
               "Advanced analytics",
             ]}
