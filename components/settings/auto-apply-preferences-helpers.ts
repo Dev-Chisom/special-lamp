@@ -52,3 +52,39 @@ export function locationsToStrings(locations: LocationPreference[]): string[] {
   return locations.map((l) => l.location)
 }
 
+// UI-only type for skills
+export interface SkillPreference {
+  id: string
+  skill: string
+  weight: 'required' | 'nice_to_have'
+}
+
+/**
+ * Convert backend string array to UI-friendly object array
+ * Filters out empty strings
+ */
+export function stringsToSkills(skills: string[] | undefined | null): SkillPreference[] {
+  if (!skills || !Array.isArray(skills)) {
+    return []
+  }
+  return skills
+    .filter((skill) => skill && typeof skill === 'string' && skill.trim().length > 0)
+    .map((skill, index) => ({
+      id: `skill-${index}-${Date.now()}`,
+      skill: skill.trim(),
+      weight: 'nice_to_have' as const,
+    }))
+}
+
+/**
+ * Convert UI object array back to backend string array
+ */
+export function skillsToStrings(skills: SkillPreference[] | undefined | null): string[] {
+  if (!skills || !Array.isArray(skills)) {
+    return []
+  }
+  return skills
+    .filter((s) => s && s.skill && s.skill.trim().length > 0)
+    .map((s) => s.skill.trim())
+}
+

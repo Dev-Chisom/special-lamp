@@ -45,8 +45,11 @@ import {
   jobTitlesToStrings,
   stringsToLocations,
   locationsToStrings,
+  stringsToSkills,
+  skillsToStrings,
   type JobTitlePreference,
   type LocationPreference,
+  type SkillPreference,
 } from "./auto-apply-preferences-helpers"
 
 export function AutoApplyPreferences() {
@@ -61,18 +64,29 @@ export function AutoApplyPreferences() {
   const [newJobTitle, setNewJobTitle] = useState("")
   const [newLocation, setNewLocation] = useState("")
   const [newSkill, setNewSkill] = useState("")
+  // Internal state for skills (UI format - objects with id, skill, weight)
+  const [skills, setSkills] = useState<SkillPreference[]>([])
   const hasFetchedPreferencesRef = useRef(false)
 
   const loadPreferences = async () => {
     setIsLoading(true)
     try {
       const response = await autoApplyPreferencesService.getPreferences()
+      // Transform skills from backend format (string[]) to UI format (objects)
+      // Ensure we have a valid array before transforming
+      const skillsArray = Array.isArray(response.preferences?.skills) 
+        ? response.preferences.skills 
+        : []
+      const transformedSkills = stringsToSkills(skillsArray)
+      setSkills(transformedSkills)
       setPreferences(response.preferences)
-      setRecentJobs(response.recent_auto_applied_jobs)
+      setRecentJobs(response.recent_auto_applied_jobs || [])
       setStats(response.stats)
     } catch (error: any) {
       console.error("Failed to load preferences:", error)
       toast.error(error?.message || "Failed to load preferences")
+      // Initialize with empty arrays on error
+      setSkills([])
     } finally {
       setIsLoading(false)
     }
@@ -138,9 +152,31 @@ export function AutoApplyPreferences() {
 
     setIsSaving(true)
     const previousPreferences = { ...preferences }
+    const previousSkills = [...skills]
 
     try {
-      const updated = await autoApplyPreferencesService.updatePreferences(preferences)
+      // Transform skills back to backend format (string[]) before saving
+      const preferencesToSave = {
+        ...preferences,
+        skills: skillsToStrings(skills),
+      }
+      const updated = await autoApplyPreferencesService.updatePreferences(preferencesToSave)
+      
+      // Check if updated response is valid
+      if (!updated) {
+        throw new Error("Invalid response from server")
+      }
+      
+      // Ensure updated has required properties
+      if (typeof updated !== 'object') {
+        throw new Error("Invalid response format from server")
+      }
+      
+      // Transform skills from response back to UI format
+      // Handle both array format and ensure it's an array
+      const skillsArray = Array.isArray(updated.skills) ? updated.skills : []
+      const transformedSkills = stringsToSkills(skillsArray)
+      setSkills(transformedSkills)
       setPreferences(updated)
       toast.success("Preferences saved successfully")
       setErrors({})
@@ -149,6 +185,7 @@ export function AutoApplyPreferences() {
       toast.error(error?.message || "Failed to save preferences")
       // Rollback on failure
       setPreferences(previousPreferences)
+      setSkills(previousSkills)
     } finally {
       setIsSaving(false)
     }
@@ -262,7 +299,7 @@ export function AutoApplyPreferences() {
   }
 
   const addSkill = () => {
-    if (!newSkill.trim() || !preferences) return
+    if (!newSkill.trim()) return
 
     const skill: SkillPreference = {
       id: Date.now().toString(),
@@ -270,20 +307,17 @@ export function AutoApplyPreferences() {
       weight: 'nice_to_have',
     }
 
-    updatePreference('skills', [...preferences.skills, skill])
+    setSkills([...skills, skill])
     setNewSkill("")
   }
 
   const removeSkill = (id: string) => {
-    if (!preferences) return
-    updatePreference('skills', preferences.skills.filter((s) => s.id !== id))
+    setSkills(skills.filter((s) => s.id !== id))
   }
 
   const toggleSkillWeight = (id: string) => {
-    if (!preferences) return
-    updatePreference(
-      'skills',
-      preferences.skills.map((s) =>
+    setSkills(
+      skills.map((s) =>
         s.id === id
           ? { ...s, weight: s.weight === 'required' ? 'nice_to_have' : 'required' }
           : s
@@ -626,7 +660,7 @@ export function AutoApplyPreferences() {
               </Button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {preferences.skills.map((skill) => (
+              {skills.map((skill) => (
                 <Badge
                   key={skill.id}
                   variant={skill.weight === 'required' ? 'default' : 'secondary'}

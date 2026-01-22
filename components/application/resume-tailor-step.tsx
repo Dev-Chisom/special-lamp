@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { resumeService, type ResumeBuild } from "@/services/resume.service"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -38,9 +38,15 @@ export function ResumeTailorStep({
   const [tailoring, setTailoring] = useState(false)
   const [tailoredResume, setTailoredResume] = useState<Resume | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const hasTailoredRef = useRef(false)
 
-  // Auto-tailor on mount
+  // Auto-tailor on mount (prevent duplicate calls in React StrictMode)
   useEffect(() => {
+    // Prevent duplicate calls (React StrictMode in development causes double render)
+    if (hasTailoredRef.current) {
+      return
+    }
+    hasTailoredRef.current = true
     tailorResume()
   }, [])
 
@@ -146,7 +152,10 @@ export function ResumeTailorStep({
           ) : error ? (
             <div className="py-8 text-center space-y-4">
               <p className="text-destructive">{error}</p>
-              <Button onClick={tailorResume} variant="outline">
+              <Button onClick={() => {
+                hasTailoredRef.current = false
+                tailorResume()
+              }} variant="outline">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Retry
               </Button>
@@ -171,58 +180,82 @@ export function ResumeTailorStep({
                   {/* Tailored Resume Preview */}
                   <div className="mt-4">
                     {/* Check if it's a built resume (has personal_info) */}
-                    {'personal_info' in tailoredResume ? (
-                      <div className="border rounded-md overflow-hidden bg-background">
-                        <ScrollArea className="h-[600px] w-full">
-                          <div className="bg-gray-50 p-4 flex justify-center">
-                            <div 
-                              className="bg-white shadow-lg"
-                              style={{
-                                width: '100%',
-                                maxWidth: '816px',
-                                minHeight: '1056px',
-                                padding: '2rem',
-                              }}
-                            >
-                              {(() => {
-                                const TemplateRenderer = getTemplateRenderer((tailoredResume as ResumeBuild).template || 'modern-professional')
-                                return <TemplateRenderer data={backendToFrontend(tailoredResume as ResumeBuild)} templateId={(tailoredResume as ResumeBuild).template || 'modern-professional'} />
-                              })()}
+                    {(() => {
+                      const isBuiltResume = 'personal_info' in tailoredResume
+                      const hasFileUrl = tailoredResume.file_url || (tailoredResume as any).pdf_url
+                      
+                      if (isBuiltResume) {
+                        try {
+                          const templateId = (tailoredResume as ResumeBuild).template || 'modern-professional'
+                          const frontendData = backendToFrontend(tailoredResume as ResumeBuild)
+                          const TemplateRenderer = getTemplateRenderer(templateId)
+                          
+                          return (
+                            <div className="border rounded-md overflow-hidden bg-background">
+                              <ScrollArea className="h-[600px] w-full">
+                                <div className="bg-gray-50 p-4 flex justify-center">
+                                  <div 
+                                    className="bg-white shadow-lg"
+                                    style={{
+                                      width: '100%',
+                                      maxWidth: '816px',
+                                      minHeight: '1056px',
+                                      padding: '2rem',
+                                    }}
+                                  >
+                                    <TemplateRenderer data={frontendData} templateId={templateId} />
+                                  </div>
+                                </div>
+                              </ScrollArea>
+                            </div>
+                          )
+                        } catch (renderError) {
+                          console.error("Error rendering tailored resume preview:", renderError)
+                          return (
+                            <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-md">
+                              <p className="text-sm text-destructive">
+                                Error rendering preview. The resume was tailored successfully, but there was an issue displaying it.
+                              </p>
+                            </div>
+                          )
+                        }
+                      } else if (hasFileUrl) {
+                        /* File-based resume - show PDF in iframe */
+                        return (
+                          <div className="border rounded-md overflow-hidden bg-background">
+                            <iframe
+                              src={`${tailoredResume.file_url || (tailoredResume as any).pdf_url}${(tailoredResume.file_url || (tailoredResume as any).pdf_url)?.includes('?') ? '&' : '?'}token=${typeof window !== 'undefined' ? localStorage.getItem(config.auth.tokenKeys.accessToken) || '' : ''}`}
+                              className="w-full h-[600px] border-0"
+                              title="Tailored Resume Preview"
+                            />
+                          </div>
+                        )
+                      } else {
+                        /* Fallback: No preview available */
+                        return (
+                          <div className="p-4 bg-background border rounded-md">
+                            <div className="space-y-3">
+                              <p className="text-sm font-medium text-foreground">
+                                Tailored Resume Ready
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Your resume has been optimized for this position. The tailored version will be used when you submit your application.
+                              </p>
+                              {(tailoredResume as any).parsed_content && (
+                                <div className="space-y-2 mt-4">
+                                  <p className="text-sm font-medium">Preview of tailored content:</p>
+                                  <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-96 border">
+                                    {typeof (tailoredResume as any).parsed_content === 'string' 
+                                      ? (tailoredResume as any).parsed_content 
+                                      : JSON.stringify((tailoredResume as any).parsed_content, null, 2)}
+                                  </pre>
+                                </div>
+                              )}
                             </div>
                           </div>
-                        </ScrollArea>
-                      </div>
-                    ) : tailoredResume.file_url || (tailoredResume as any).pdf_url ? (
-                      /* File-based resume - show PDF in iframe */
-                      <div className="border rounded-md overflow-hidden bg-background">
-                        <iframe
-                          src={`${tailoredResume.file_url || (tailoredResume as any).pdf_url}${(tailoredResume.file_url || (tailoredResume as any).pdf_url)?.includes('?') ? '&' : '?'}token=${typeof window !== 'undefined' ? localStorage.getItem(config.auth.tokenKeys.accessToken) || '' : ''}`}
-                          className="w-full h-[600px] border-0"
-                          title="Tailored Resume Preview"
-                        />
-                      </div>
-                    ) : (
-                      <div className="p-4 bg-background border rounded-md">
-                        <div className="space-y-3">
-                          <p className="text-sm font-medium text-foreground">
-                            Tailored Resume Ready
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Your resume has been optimized for this position. The tailored version will be used when you submit your application.
-                          </p>
-                          {(tailoredResume as any).parsed_content && (
-                            <div className="space-y-2 mt-4">
-                              <p className="text-sm font-medium">Preview of tailored content:</p>
-                              <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-96 border">
-                                {typeof (tailoredResume as any).parsed_content === 'string' 
-                                  ? (tailoredResume as any).parsed_content 
-                                  : JSON.stringify((tailoredResume as any).parsed_content, null, 2)}
-                              </pre>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
+                        )
+                      }
+                    })()}
                   </div>
                 </div>
               </TabsContent>
@@ -322,7 +355,10 @@ export function ResumeTailorStep({
           </Button>
           {tailoredResume && (
             <>
-              <Button variant="outline" onClick={tailorResume}>
+              <Button variant="outline" onClick={() => {
+                hasTailoredRef.current = false
+                tailorResume()
+              }}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Regenerate
               </Button>

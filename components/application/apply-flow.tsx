@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { resumeService } from "@/services/resume.service"
 import { applicationService } from "@/services/application.service"
@@ -26,8 +26,14 @@ export function ApplyFlow({ job, onCancel }: ApplyFlowProps) {
   const [selectedResume, setSelectedResume] = useState<Resume | null>(null)
   const [tailoredResume, setTailoredResume] = useState<Resume | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const hasCheckedResumesRef = useRef(false)
 
   useEffect(() => {
+    // Prevent duplicate calls (React StrictMode in development causes double render)
+    if (hasCheckedResumesRef.current) {
+      return
+    }
+    hasCheckedResumesRef.current = true
     checkResumes()
   }, [])
 

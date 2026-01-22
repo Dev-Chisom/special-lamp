@@ -30,7 +30,23 @@ class AutoApplyPreferencesService {
       '/auto-apply/preferences',
       { preferences }
     )
-    return response.preferences
+    
+    // Handle different response structures
+    if (!response) {
+      throw new Error("No response received from server")
+    }
+    
+    // If response already has preferences property
+    if ('preferences' in response && response.preferences) {
+      return response.preferences
+    }
+    
+    // If response is the preferences object directly
+    if ('status' in response || 'skills' in response) {
+      return response as AutoApplyPreferences
+    }
+    
+    throw new Error("Invalid response format from server")
   }
 
   /**
