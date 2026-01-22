@@ -4,8 +4,8 @@ export const config = {
   },
   auth: {
     tokenKeys: {
-      accessToken: 'pathforge_access_token',
-      refreshToken: 'pathforge_refresh_token',
+      accessToken: 'applyengine_access_token',
+      refreshToken: 'applyengine_refresh_token',
     },
   },
 } as const;

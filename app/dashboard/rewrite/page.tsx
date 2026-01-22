@@ -2,7 +2,7 @@ import { Suspense } from "react"
 import { RewriteInterface } from "@/components/rewrite/rewrite-interface"
 
 export const metadata = {
-  title: "Resume Rewriter - PathForge AI",
+  title: "Resume Rewriter - ApplyEngine",
   description: "AI-powered resume optimization",
 }
 

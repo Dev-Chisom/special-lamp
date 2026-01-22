@@ -1,6 +1,6 @@
 # Services Documentation
 
-This directory contains all API service modules for the PathForge frontend application.
+This directory contains all API service modules for the ApplyEngine frontend application.
 
 ## Structure
 

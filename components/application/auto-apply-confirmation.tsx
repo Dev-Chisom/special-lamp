@@ -106,7 +106,7 @@ export function AutoApplyConfirmation({
                   htmlFor="consent"
                   className="text-sm leading-relaxed cursor-pointer"
                 >
-                  I consent to automated application submission. I understand that PathForge AI will fill out the application form, upload my resume, and submit the application on my behalf.
+                  I consent to automated application submission. I understand that ApplyEngine will fill out the application form, upload my resume, and submit the application on my behalf.
                 </Label>
               </div>
 
@@ -116,7 +116,7 @@ export function AutoApplyConfirmation({
                 </Label>
                 <Textarea
                   id="consent-text"
-                  placeholder="e.g., I authorize PathForge AI to assist me in applying for this position..."
+                  placeholder="e.g., I authorize ApplyEngine to assist me in applying for this position..."
                   value={consentText}
                   onChange={(e) => setConsentText(e.target.value)}
                   rows={3}

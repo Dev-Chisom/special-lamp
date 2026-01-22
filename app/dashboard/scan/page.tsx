@@ -2,7 +2,7 @@ import { Suspense } from "react"
 import { ScanInterface } from "@/components/scan/scan-interface"
 
 export const metadata = {
-  title: "Resume Scanner - PathForge AI",
+  title: "Resume Scanner - ApplyEngine",
   description: "Scan your resume for ATS compatibility",
 }
 

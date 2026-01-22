@@ -1,7 +1,7 @@
 import { ResumeManagerInterface } from "@/components/resume-manager/resume-manager-interface"
 
 export const metadata = {
-  title: "Resume Manager - PathForge AI",
+  title: "Resume Manager - ApplyEngine",
   description: "Manage all your resumes in one place",
 }
 

@@ -51,7 +51,7 @@ export function DashboardSidebar() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center shrink-0">
               <Target className="h-5 w-5 text-primary-foreground" />
             </div>
-            {!isCollapsed && <span className="text-xl font-bold">PathForge AI</span>}
+            {!isCollapsed && <span className="text-xl font-bold">ApplyEngine</span>}
           </Link>
         </div>
 

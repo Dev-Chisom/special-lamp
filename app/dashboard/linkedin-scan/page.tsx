@@ -2,7 +2,7 @@
 // import { LinkedInScanInterface } from "@/components/linkedin/linkedin-scan-interface"
 
 // export const metadata = {
-//   title: "LinkedIn Scan - PathForge AI",
+//   title: "LinkedIn Scan - ApplyEngine",
 //   description: "Scan LinkedIn profiles and job posts for ATS optimization",
 // }
 

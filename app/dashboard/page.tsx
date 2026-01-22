@@ -3,7 +3,7 @@ import { DashboardContent } from "@/components/dashboard/dashboard-content"
 import { DashboardSkeleton } from "@/components/dashboard/dashboard-skeleton"
 
 export const metadata = {
-  title: "Dashboard - PathForge AI",
+  title: "Dashboard - ApplyEngine",
   description: "Your AI-powered job search dashboard",
 }
 

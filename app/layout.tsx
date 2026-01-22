@@ -9,9 +9,9 @@ import "./globals.css"
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
 export const metadata: Metadata = {
-  title: "PathForge AI - AI-Powered Resume Optimization",
+  title: "ApplyEngine - AI-Powered Resume Optimization",
   description: "Beat ATS systems, optimize your resume, and land your dream job with AI-powered tools",
-  generator: "PathForge AI",
+  generator: "ApplyEngine",
   icons: {
     icon: [
       {

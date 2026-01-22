@@ -378,7 +378,7 @@ export function DashboardContent() {
                 )}
               </div>
               
-              <div className="flex gap-3 sm:flex-row">
+              <div className="flex gap-3 sm:flex-row mt-4">
                 <Link href="/dashboard/find-jobs" className="flex-1 sm:flex-none">
                   <Button size="lg" className="w-full">
                     <Sparkles className="mr-2 h-4 w-4" />

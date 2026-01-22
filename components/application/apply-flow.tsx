@@ -98,7 +98,7 @@ export function ApplyFlow({ job, onCancel }: ApplyFlowProps) {
         job_id: jobId,
         resume_id: tailoredResume.id,
         user_consent: true,
-        consent_text: consentText || `I authorize PathForge AI to assist me in applying for the ${(job as IngestedJobResponse).job_title || (job as any).title || "job"} position.`,
+        consent_text: consentText || `I authorize ApplyEngine to assist me in applying for the ${(job as IngestedJobResponse).job_title || (job as any).title || "job"} position.`,
         external_url: (job as IngestedJobResponse).application_url,
       })
 

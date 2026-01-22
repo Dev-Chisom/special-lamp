@@ -669,7 +669,7 @@ function ApplicationLogs({
               {log.screenshot_url && (
                 <div className="mt-2">
                   <a
-                    href={`${log.screenshot_url}?token=${typeof window !== 'undefined' ? localStorage.getItem('pathforge_access_token') || '' : ''}`}
+                    href={`${log.screenshot_url}?token=${typeof window !== 'undefined' ? localStorage.getItem('applyengine_access_token') || '' : ''}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs text-primary hover:underline"

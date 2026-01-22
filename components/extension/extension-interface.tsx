@@ -12,7 +12,7 @@ export function ExtensionInterface() {
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-accent mb-6">
           <Chrome className="h-10 w-10 text-primary-foreground" />
         </div>
-        <h1 className="text-4xl font-bold mb-4">PathForge AI Chrome Extension</h1>
+        <h1 className="text-4xl font-bold mb-4">ApplyEngine Chrome Extension</h1>
         <p className="text-xl text-muted-foreground mb-8">
           Apply to jobs faster with real-time ATS scoring and instant resume optimization
         </p>
@@ -119,7 +119,7 @@ export function ExtensionInterface() {
               <div>
                 <h4 className="font-semibold mb-1">Install the Extension</h4>
                 <p className="text-muted-foreground text-sm">
-                  Add PathForge AI to Chrome in one click - it's completely free
+                  Add ApplyEngine to Chrome in one click - it's completely free
                 </p>
               </div>
             </div>

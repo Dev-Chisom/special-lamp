@@ -1,7 +1,7 @@
 import { PricingPlans } from "@/components/pricing/pricing-plans"
 
 export const metadata = {
-  title: "Pricing - PathForge AI",
+  title: "Pricing - ApplyEngine",
   description: "Choose the right plan for your job search",
 }
 

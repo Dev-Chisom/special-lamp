@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Mail, ArrowLeft } from "lucide-react"
 
 export const metadata = {
-  title: "Check Your Email - PathForge AI",
+  title: "Check Your Email - ApplyEngine",
   description: "Password reset email sent",
 }
 

@@ -112,7 +112,7 @@ export function EmptyState({ onJobListingsUpdate }: EmptyStateProps) {
                 <div className="space-y-1.5">
                   <h3 className="text-base sm:text-lg font-semibold">Upload Your Resume</h3>
                   <p className="text-xs sm:text-sm text-muted-foreground">
-                    Let PathForge AI match you with jobs using your resume and experiences, not just job titles or keywords.
+                    Let ApplyEngine match you with jobs using your resume and experiences, not just job titles or keywords.
                   </p>
                 </div>
                 <input

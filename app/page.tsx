@@ -15,7 +15,7 @@ export default function LandingPage() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
               <Target className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-lg sm:text-xl font-bold">PathForge AI</span>
+            <span className="text-lg sm:text-xl font-bold">ApplyEngine</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
             <Link
@@ -263,9 +263,9 @@ export default function LandingPage() {
               <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                 <Target className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="font-bold">PathForge AI</span>
+              <span className="font-bold">ApplyEngine</span>
             </div>
-            <p className="text-xs sm:text-sm text-muted-foreground">2025 PathForge AI. All rights reserved.</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">2025 ApplyEngine. All rights reserved.</p>
           </div>
         </div>
       </footer>
