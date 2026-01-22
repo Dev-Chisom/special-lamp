@@ -109,20 +109,24 @@ export function ApplicationReviewModal({
   useEffect(() => {
     if (!open || !application) return
 
-    // Try to extract resume_id from log entries or application metadata
-    const resumeId = extractResumeId(application)
-    if (!resumeId) return
+    const fetchResumeDetails = async () => {
+      // Try to extract resume_id from log entries or application metadata
+      const resumeId = extractResumeId(application)
+      if (!resumeId) return
 
-    setIsLoadingResume(true)
-    try {
-      const resumeData = await resumeService.getResume(resumeId)
-      setResume(resumeData)
-    } catch (error: any) {
-      console.error("Failed to fetch resume details:", error)
-      // Don't show toast - it's not critical
-    } finally {
-      setIsLoadingResume(false)
+      setIsLoadingResume(true)
+      try {
+        const resumeData = await resumeService.getResume(resumeId)
+        setResume(resumeData)
+      } catch (error: any) {
+        console.error("Failed to fetch resume details:", error)
+        // Don't show toast - it's not critical
+      } finally {
+        setIsLoadingResume(false)
+      }
     }
+
+    fetchResumeDetails()
   }, [open, application])
 
   const handleApprove = async () => {
