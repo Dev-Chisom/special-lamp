@@ -47,7 +47,7 @@ interface ResumeBuilderWizardProps {
   onComplete?: () => void
 }
 
-export function ResumeBuilderWizard({ resumeId, onComplete }: ResumeBuilderWizardProps) {
+export function ResumeBuilderWizard({ resumeId, onComplete, onBack }: ResumeBuilderWizardProps) {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(0)
   const [resumeData, setResumeData] = useState<ResumeData>(initialResumeData)
@@ -257,6 +257,7 @@ export function ResumeBuilderWizard({ resumeId, onComplete }: ResumeBuilderWizar
             selectedTemplate={selectedTemplate}
             onSelectTemplate={setSelectedTemplate}
             onContinue={nextStep}
+            onBack={onBack}
             userData={resumeData}
             isEditing={!!resumeId}
           />

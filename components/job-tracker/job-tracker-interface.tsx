@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import {
   DndContext,
   DragOverlay,
@@ -44,9 +44,18 @@ export function JobTrackerInterface() {
   const [isLoadingListings, setIsLoadingListings] = useState(false)
   const [jobsError, setJobsError] = useState<string | null>(null)
   const [listingsError, setListingsError] = useState<string | null>(null)
+  const hasFetchedJobsRef = useRef(false)
 
   // Fetch user's saved jobs on mount
   useEffect(() => {
+    // Prevent duplicate calls (React StrictMode in development causes double render)
+    if (hasFetchedJobsRef.current) {
+      // If we've already fetched, ensure loading is false
+      setIsLoadingJobs(false)
+      return
+    }
+    hasFetchedJobsRef.current = true
+
     let isMounted = true
 
     const fetchJobs = async () => {
@@ -55,25 +64,29 @@ export function JobTrackerInterface() {
       try {
         const backendJobs = await jobService.getJobs()
 
-        if (isMounted) {
-          // Handle both array and object with items property
-          const jobsArray = Array.isArray(backendJobs)
-            ? backendJobs
-            : (backendJobs as any)?.items || []
-          const mappedJobs = jobsArray.map(mapJobResponseToApplication)
-          setJobs(mappedJobs)
+        if (!isMounted) {
+          setIsLoadingJobs(false)
+          return
         }
+
+        // Handle both array and object with items property
+        const jobsArray = Array.isArray(backendJobs)
+          ? backendJobs
+          : (backendJobs as any)?.items || []
+        
+        const mappedJobs = jobsArray.map(mapJobResponseToApplication)
+        setJobs(mappedJobs)
+        setIsLoadingJobs(false)
       } catch (error: any) {
         console.error("[JobTracker] Failed to fetch jobs:", error)
         if (isMounted) {
           setJobsError(error?.message || "Failed to load jobs")
+          setIsLoadingJobs(false)
           // Don't show toast on initial load if it's a 401/403 (user might not be authenticated yet)
           if (error?.statusCode !== 401 && error?.statusCode !== 403) {
             toast.error(error?.message || "Failed to load jobs. Please try again.")
           }
-        }
-      } finally {
-        if (isMounted) {
+        } else {
           setIsLoadingJobs(false)
         }
       }
@@ -82,69 +95,82 @@ export function JobTrackerInterface() {
 
     return () => {
       isMounted = false
+      // Ensure loading is cleared on unmount
+      setIsLoadingJobs(false)
     }
   }, [])
 
   // Track if we've done initial fetch to prevent double calls
   const hasFetchedListingsRef = useRef(false)
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Fetch job listings when search/filters change
-  useEffect(() => {
-    let isMounted = true
+  // Fetch job listings function (extracted for reuse)
+  const fetchJobListings = useCallback(async (query?: string) => {
+    setIsLoadingListings(true)
+    setListingsError(null)
+    try {
+      const searchQuery = query !== undefined ? query : jobSearchQuery
+      const response = await jobService.searchJobs({
+        query: searchQuery || undefined,
+        page: 1,
+        page_size: 20,
+      })
 
-    const fetchJobListings = async () => {
-      setIsLoadingListings(true)
-      setListingsError(null)
-      try {
-        const response = await jobService.searchJobs({
-          query: jobSearchQuery || undefined,
-          page: 1,
-          page_size: 20,
-        })
-
-        if (isMounted) {
-          const items = response.items || []
-          const mappedListings = items.map(mapIngestedJobToListing)
-          setJobListings(mappedListings)
-          // Store original ingested jobs for reference
-          setIngestedJobs(items)
-          hasFetchedListingsRef.current = true
-        }
-      } catch (error: any) {
-        console.error("[JobTracker] Failed to fetch job listings:", error)
-        if (isMounted) {
-          setListingsError(error?.message || "Failed to load job listings")
-          if (error?.statusCode !== 401 && error?.statusCode !== 403) {
-            toast.error(
-              error?.message || "Failed to load job listings. Please try again."
-            )
-          }
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoadingListings(false)
-        }
+      const items = response.items || []
+      const mappedListings = items.map(mapIngestedJobToListing)
+      setJobListings(mappedListings)
+      // Store original ingested jobs for reference
+      setIngestedJobs(items)
+      hasFetchedListingsRef.current = true
+    } catch (error: any) {
+      console.error("[JobTracker] Failed to fetch job listings:", error)
+      setListingsError(error?.message || "Failed to load job listings")
+      if (error?.statusCode !== 401 && error?.statusCode !== 403) {
+        toast.error(
+          error?.message || "Failed to load job listings. Please try again."
+        )
       }
+    } finally {
+      setIsLoadingListings(false)
+    }
+  }, [jobSearchQuery])
+
+  // Fetch job listings when search query changes (with debounce)
+  useEffect(() => {
+    // Clear any existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
     }
 
-    // Only fetch on search query change, not on initial mount (to avoid double calls)
-    // Initial fetch will happen when user searches or when they upload resume
-    if (jobSearchQuery) {
+    // Only fetch if there's a search query
+    if (jobSearchQuery && jobSearchQuery.trim()) {
       // Debounce search to avoid too many API calls
-      const timeoutId = setTimeout(() => {
+      searchTimeoutRef.current = setTimeout(() => {
         fetchJobListings()
       }, 300) // 300ms debounce
 
       return () => {
-        isMounted = false
-        clearTimeout(timeoutId)
+        if (searchTimeoutRef.current) {
+          clearTimeout(searchTimeoutRef.current)
+        }
       }
+    } else {
+      // Clear results when search is empty
+      setJobListings([])
+      setIngestedJobs([])
     }
+  }, [jobSearchQuery, fetchJobListings])
 
-    return () => {
-      isMounted = false
+  // Handler for explicit search button click
+  const handleSearchClick = () => {
+    if (jobSearchQuery && jobSearchQuery.trim()) {
+      // Clear debounce and search immediately
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+      fetchJobListings()
     }
-  }, [jobSearchQuery])
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -397,15 +423,9 @@ Requirements
     setIsDetailViewOpen(true)
   }
 
-  const filteredJobListings = jobListings.filter((listing) => {
-    if (!jobSearchQuery) return true
-    const query = jobSearchQuery.toLowerCase()
-    return (
-      listing.company.toLowerCase().includes(query) ||
-      listing.title.toLowerCase().includes(query) ||
-      listing.location.toLowerCase().includes(query)
-    )
-  })
+  // Don't filter job listings client-side - API search handles filtering
+  // The API search already filters by query, so we just use the results directly
+  const filteredJobListings = jobListings
 
   const activeJob = activeId ? jobs.find((j) => j.id === activeId) : null
 
@@ -471,6 +491,7 @@ Requirements
                 jobListings={filteredJobListings}
                 jobSearchQuery={jobSearchQuery}
                 onJobSearchChange={setJobSearchQuery}
+                onSearchClick={handleSearchClick}
                 onSaveJob={handleSaveJob}
                 onJobClick={handleJobListingClick}
                 isLoading={isLoadingListings}

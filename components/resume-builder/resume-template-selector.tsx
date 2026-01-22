@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { FileText, Check, Eye, Loader2 } from "lucide-react"
+import { FileText, Check, Eye, Loader2, ChevronLeft } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { resumeService, type ResumeTemplate } from "@/services/resume.service"
@@ -29,24 +29,10 @@ const MOCK_TEMPLATES: ResumeTemplate[] = [
     is_premium: false,
   },
   {
-    id: "modern-student",
-    name: "Modern Student",
-    description: "Designed for students and recent graduates",
-    category: "student",
-    is_premium: false,
-  },
-  {
     id: "minimalist-expert",
     name: "Minimalist Expert",
     description: "Clean and minimal, emphasizes content",
     category: "minimalist",
-    is_premium: false,
-  },
-  {
-    id: "timeless-professional",
-    name: "Timeless Professional",
-    description: "Elegant and timeless design",
-    category: "professional",
     is_premium: false,
   },
 ]
@@ -55,6 +41,7 @@ interface ResumeTemplateSelectorProps {
   selectedTemplate?: string
   onSelectTemplate: (templateId: string) => void
   onContinue: () => void
+  onBack?: () => void
   userData?: ResumeData // Optional: user's actual data for user-aware preview
   isEditing?: boolean // Whether we're editing an existing resume or importing
 }
@@ -63,6 +50,7 @@ export function ResumeTemplateSelector({
   selectedTemplate,
   onSelectTemplate,
   onContinue,
+  onBack,
   userData,
   isEditing = false,
 }: ResumeTemplateSelectorProps) {
@@ -226,23 +214,36 @@ export function ResumeTemplateSelector({
         </div>
       )}
 
-      {/* Continue Button */}
-      <div className="flex justify-end pt-4">
-        <Button
-          onClick={onContinue}
-          disabled={!selectedTemplate || isLoadingTemplates}
-          size="lg"
-          className="min-w-[200px]"
-        >
-          {isLoadingTemplates ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Loading...
-            </>
-          ) : (
-            `Continue with ${selectedTemplate ? displayTemplates.find(t => t.id === selectedTemplate)?.name : "Template"}`
-          )}
-        </Button>
+      {/* Navigation Buttons */}
+      <div className="flex justify-between items-center pt-4">
+        {onBack && (
+          <Button
+            variant="outline"
+            onClick={onBack}
+            size="lg"
+            className="gap-2"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Back
+          </Button>
+        )}
+        <div className={onBack ? "ml-auto" : ""}>
+          <Button
+            onClick={onContinue}
+            disabled={!selectedTemplate || isLoadingTemplates}
+            size="lg"
+            className="min-w-[200px]"
+          >
+            {isLoadingTemplates ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              `Continue with ${selectedTemplate ? displayTemplates.find(t => t.id === selectedTemplate)?.name : "Template"}`
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Preview Dialog */}

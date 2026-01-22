@@ -14,16 +14,17 @@ interface TemplateRendererProps {
 /**
  * Classic Professional Template
  * Traditional, clean design with clear sections
+ * ATS-Optimized: Sans-serif font, left-aligned header, no colors
  */
 export function ClassicProfessionalTemplate({ data }: TemplateRendererProps) {
   return (
-    <div className="bg-white text-gray-900 p-8 text-sm leading-relaxed" style={{ fontFamily: 'Georgia, serif' }}>
-      {/* Header */}
-      <div className="text-center border-b-2 border-gray-800 pb-4 mb-6">
+    <div className="bg-white text-gray-900 p-8 text-sm leading-relaxed" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+      {/* Header - Left-aligned for ATS compatibility */}
+      <div className="border-b-2 border-gray-800 pb-4 mb-6">
         <h1 className="text-3xl font-bold mb-2">
           {data.personalInfo.firstName} {data.personalInfo.lastName}
         </h1>
-        <div className="flex flex-wrap justify-center gap-2 text-sm">
+        <div className="flex flex-wrap gap-2 text-sm">
           {data.personalInfo.email && <span>{data.personalInfo.email}</span>}
           {data.personalInfo.phone && <span>• {data.personalInfo.phone}</span>}
           {data.personalInfo.location && <span>• {data.personalInfo.location}</span>}
@@ -107,17 +108,18 @@ export function ClassicProfessionalTemplate({ data }: TemplateRendererProps) {
 
 /**
  * Modern Professional Template
- * Contemporary design with subtle colors
+ * Contemporary design with clean layout
+ * ATS-Optimized: No colors, black text only, simple borders
  */
 export function ModernProfessionalTemplate({ data }: TemplateRendererProps) {
   return (
-    <div className="bg-white text-gray-900 p-8 text-sm leading-relaxed">
-      {/* Header with accent */}
-      <div className="bg-blue-600 text-white p-6 mb-6 rounded-lg">
+    <div className="bg-white text-gray-900 p-8 text-sm leading-relaxed" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+      {/* Header - Simple, no colored background */}
+      <div className="border-b-2 border-gray-800 pb-4 mb-6">
         <h1 className="text-3xl font-bold mb-2">
           {data.personalInfo.firstName} {data.personalInfo.lastName}
         </h1>
-        <div className="flex flex-wrap gap-3 text-blue-100">
+        <div className="flex flex-wrap gap-3 text-sm">
           {data.personalInfo.email && <span>{data.personalInfo.email}</span>}
           {data.personalInfo.phone && <span>• {data.personalInfo.phone}</span>}
           {data.personalInfo.location && <span>• {data.personalInfo.location}</span>}
@@ -127,30 +129,30 @@ export function ModernProfessionalTemplate({ data }: TemplateRendererProps) {
 
       {/* Summary */}
       {data.summary && (
-        <div className="mb-6 pl-4 border-l-4 border-blue-600">
-          <h2 className="text-lg font-semibold mb-2 text-blue-600">Summary</h2>
-          <p className="text-gray-700">{data.summary}</p>
+        <div className="mb-6 pl-4 border-l-2 border-gray-400">
+          <h2 className="text-lg font-semibold mb-2">Summary</h2>
+          <p className="text-gray-900">{data.summary}</p>
         </div>
       )}
 
       {/* Experience */}
       {data.experience.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-3 text-blue-600 border-b-2 border-blue-600 pb-1">Experience</h2>
+          <h2 className="text-lg font-semibold mb-3 border-b-2 border-gray-400 pb-1">Experience</h2>
           <div className="space-y-4">
             {data.experience.map((exp) => (
               <div key={exp.id} className="pl-4 border-l-2 border-gray-300">
                 <div className="flex justify-between items-start mb-1">
                   <div>
                     <h3 className="font-semibold text-base">{exp.jobTitle}</h3>
-                    <p className="text-blue-600">{exp.company}</p>
+                    <p className="text-gray-900 font-medium">{exp.company}</p>
                   </div>
-                  <span className="text-gray-600 text-xs">
+                  <span className="text-gray-700 text-xs">
                     {exp.startDate} - {exp.isCurrent ? 'Present' : exp.endDate}
                   </span>
                 </div>
                 {exp.description && (
-                  <div className="mt-2 text-gray-700 whitespace-pre-line text-xs">{exp.description}</div>
+                  <div className="mt-2 text-gray-900 whitespace-pre-line text-xs">{exp.description}</div>
                 )}
               </div>
             ))}
@@ -161,13 +163,13 @@ export function ModernProfessionalTemplate({ data }: TemplateRendererProps) {
       {/* Education */}
       {data.education.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-3 text-blue-600 border-b-2 border-blue-600 pb-1">Education</h2>
+          <h2 className="text-lg font-semibold mb-3 border-b-2 border-gray-400 pb-1">Education</h2>
           <div className="space-y-3">
             {data.education.map((edu) => (
               <div key={edu.id} className="pl-4 border-l-2 border-gray-300">
                 <h3 className="font-semibold">{edu.degree}</h3>
-                <p className="text-blue-600">{edu.school}</p>
-                <span className="text-gray-600 text-xs">
+                <p className="text-gray-900">{edu.school}</p>
+                <span className="text-gray-700 text-xs">
                   {edu.startYear} - {edu.isCurrent ? 'Present' : edu.endYear}
                 </span>
               </div>
@@ -179,10 +181,10 @@ export function ModernProfessionalTemplate({ data }: TemplateRendererProps) {
       {/* Skills */}
       {data.skills.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold mb-3 text-blue-600 border-b-2 border-blue-600 pb-1">Skills</h2>
+          <h2 className="text-lg font-semibold mb-3 border-b-2 border-gray-400 pb-1">Skills</h2>
           <div className="flex flex-wrap gap-2">
             {data.skills.map((skill, idx) => (
-              <span key={idx} className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-medium">
+              <span key={idx} className="bg-gray-100 text-gray-900 px-3 py-1 rounded text-xs font-medium border border-gray-300">
                 {skill}
               </span>
             ))}
@@ -291,9 +293,7 @@ export function getTemplateRenderer(templateId: string): React.ComponentType<Tem
   const renderers: Record<string, React.ComponentType<TemplateRendererProps>> = {
     'classic-professional': ClassicProfessionalTemplate,
     'modern-professional': ModernProfessionalTemplate,
-    'modern-student': ModernProfessionalTemplate, // Reuse for now
     'minimalist-expert': MinimalistExpertTemplate,
-    'timeless-professional': ClassicProfessionalTemplate, // Reuse for now
   }
 
   return renderers[templateId] || ClassicProfessionalTemplate

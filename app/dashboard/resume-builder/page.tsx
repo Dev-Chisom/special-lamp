@@ -12,7 +12,12 @@ function ResumeBuilderContent() {
   const [startBuilding, setStartBuilding] = useState(!!resumeId)
 
   if (startBuilding || resumeId) {
-    return <ResumeBuilderWizard resumeId={resumeId || undefined} />
+    return (
+      <ResumeBuilderWizard 
+        resumeId={resumeId || undefined}
+        onBack={() => setStartBuilding(false)}
+      />
+    )
   }
 
   return (

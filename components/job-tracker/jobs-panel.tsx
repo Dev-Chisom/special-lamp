@@ -44,6 +44,7 @@ interface JobsPanelProps {
   jobListings: JobListing[]
   jobSearchQuery: string
   onJobSearchChange: (query: string) => void
+  onSearchClick?: () => void
   onSaveJob: (listing: JobListing) => void
   onJobClick: (listing: JobListing) => void
   isLoading?: boolean
@@ -53,6 +54,7 @@ export function JobsPanel({
   jobListings,
   jobSearchQuery,
   onJobSearchChange,
+  onSearchClick,
   onSaveJob,
   onJobClick,
   isLoading,
@@ -138,7 +140,9 @@ export function JobsPanel({
               </button>
             )}
           </div>
-          <Button className="px-6">Search</Button>
+          <Button className="px-6" onClick={onSearchClick} disabled={!jobSearchQuery?.trim()}>
+            Search
+          </Button>
         </div>
 
         {/* Filters */}
