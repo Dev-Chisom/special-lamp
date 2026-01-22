@@ -47,9 +47,6 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-12 sm:py-20 text-center">
         <div className="max-w-4xl mx-auto">
-          <Badge variant="secondary" className="mb-6">
-            Powered by GPT-4 Turbo
-          </Badge>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
             Land Your Dream Job with AI-Powered Resume Optimization
           </h1>
