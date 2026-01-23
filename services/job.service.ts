@@ -31,6 +31,21 @@ export interface JobResponse {
   notes?: string | null;
   created_at: string;
   updated_at: string;
+  // Full job details from ingested job (when available)
+  ingested_job_details?: {
+    job_description?: string; // Full description
+    salary_min?: number;
+    salary_max?: number;
+    salary_currency?: string;
+    salary_period?: string;
+    required_skills?: string[];
+    preferred_skills?: string[];
+    benefits?: string[];
+    education_level?: string;
+    years_of_experience_min?: number;
+    years_of_experience_max?: number;
+    keywords?: string[];
+  };
 }
 
 export interface CreateJobRequest {
@@ -83,8 +98,8 @@ export interface IngestedJobResponse {
   location_type: LocationType;
   employment_type: EmploymentType;
   seniority_level?: string;
-  description_snippet?: string;
-  job_description?: string; // Kept for backward compatibility, but prefer description_snippet
+  description_snippet?: string; // Truncated description for list views
+  job_description?: string; // Full description for detail views
   required_skills?: string[];
   preferred_skills?: string[];
   application_url: string;
@@ -92,6 +107,16 @@ export interface IngestedJobResponse {
   is_active: boolean;
   is_fresh: boolean;
   quality_score?: number;
+  // Additional job details
+  salary_min?: number;
+  salary_max?: number;
+  salary_currency?: string;
+  salary_period?: string;
+  benefits?: string[];
+  education_level?: string;
+  years_of_experience_min?: number;
+  years_of_experience_max?: number;
+  keywords?: string[];
 }
 
 export interface PaginatedResponse<T> {
@@ -245,14 +270,24 @@ class JobService {
    * Helper method to save a job from search results to tracker
    */
   ingestedJobToCreateRequest(ingestedJob: IngestedJobResponse): CreateJobRequest {
+    // Format salary range if available
+    let salaryRange: string | undefined;
+    if (ingestedJob.salary_min || ingestedJob.salary_max) {
+      const currency = ingestedJob.salary_currency || 'USD';
+      const period = ingestedJob.salary_period || 'year';
+      const min = ingestedJob.salary_min ? `${currency} ${ingestedJob.salary_min.toLocaleString()}` : '';
+      const max = ingestedJob.salary_max ? `${currency} ${ingestedJob.salary_max.toLocaleString()}` : '';
+      salaryRange = min && max ? `${min} - ${max} per ${period}` : min || max || undefined;
+    }
+
     return {
       title: ingestedJob.job_title,
       company: ingestedJob.company_name,
       location: ingestedJob.location_raw,
       job_type: ingestedJob.employment_type,
-      description: ingestedJob.description_snippet || ingestedJob.job_description || '',
+      description: ingestedJob.job_description || ingestedJob.description_snippet || '',
       requirements: ingestedJob.required_skills?.join(', ') || '',
-      salary_range: undefined, // Not available in ingested job
+      salary_range: salaryRange,
       source: 'platform',
       external_url: ingestedJob.application_url,
       ingested_job_id: ingestedJob.id,

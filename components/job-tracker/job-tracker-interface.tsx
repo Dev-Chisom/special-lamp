@@ -382,9 +382,22 @@ export function JobTrackerInterface() {
     }
   }
 
-  const handleJobListingClick = (listing: JobListing) => {
+  const handleJobListingClick = async (listing: JobListing) => {
     // Find the original ingested job
-    const ingestedJob = ingestedJobs.find((j) => j.id === listing.id)
+    let ingestedJob = ingestedJobs.find((j) => j.id === listing.id)
+    
+    // If we don't have full details, fetch them
+    if (ingestedJob && (!ingestedJob.job_description || ingestedJob.job_description.length < 500)) {
+      try {
+        const fullDetails = await jobService.getJobDetails(listing.id)
+        ingestedJob = { ...ingestedJob, ...fullDetails }
+        // Update the ingestedJobs array
+        setIngestedJobs(prev => prev.map(j => j.id === listing.id ? fullDetails : j))
+      } catch (error) {
+        console.error("Failed to fetch full job details:", error)
+        // Continue with what we have
+      }
+    }
     
     // Convert JobListing to JobApplication for display
     const jobApplication: JobApplication = {
@@ -396,9 +409,9 @@ export function JobTrackerInterface() {
       matchScore: "LOW",
       jobUrl: listing.url,
       jobDescription:
+        ingestedJob?.job_description ||
         listing.description ||
         ingestedJob?.description_snippet ||
-        ingestedJob?.job_description ||
         `Join our team at ${listing.company} as a ${listing.title}. This is an exciting opportunity to work in ${listing.location}.
 
 About This Opportunity

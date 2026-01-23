@@ -49,6 +49,7 @@ export function FindJobsInterface() {
   const router = useRouter()
   const [jobs, setJobs] = useState<IngestedJobResponse[]>([])
   const [selectedJob, setSelectedJob] = useState<IngestedJobResponse | null>(null)
+  const [isLoadingJobDetails, setIsLoadingJobDetails] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [location, setLocation] = useState("")
   const [dateRange, setDateRange] = useState<string>("any")
@@ -248,9 +249,40 @@ export function FindJobsInterface() {
     })
   }
 
+  // Fetch full job details when a job is selected
+  useEffect(() => {
+    const fetchFullJobDetails = async () => {
+      if (!selectedJob) return
+
+      // If we already have the full description, no need to fetch
+      if (selectedJob.job_description && selectedJob.job_description.length > 500) {
+        return
+      }
+
+      setIsLoadingJobDetails(true)
+      try {
+        const fullJobDetails = await jobService.getJobDetails(selectedJob.id)
+        // Merge full details with existing job data
+        setSelectedJob({
+          ...selectedJob,
+          ...fullJobDetails,
+          // Ensure we use the full description
+          job_description: fullJobDetails.job_description || selectedJob.job_description,
+        })
+      } catch (error: any) {
+        console.error("Failed to fetch full job details:", error)
+        // Don't show error toast - just use what we have
+      } finally {
+        setIsLoadingJobDetails(false)
+      }
+    }
+
+    fetchFullJobDetails()
+  }, [selectedJob?.id])
+
   const handleScan = () => {
     if (selectedJob) {
-      // Navigate to scan page with job context
+      // Navigate to scan page with job context - use full description
       const jobDescription = selectedJob.job_description || selectedJob.description_snippet || ""
       router.push(`/dashboard/scan?jobId=${selectedJob.id}&jobDescription=${encodeURIComponent(jobDescription)}`)
     }
@@ -260,17 +292,8 @@ export function FindJobsInterface() {
     if (!selectedJob) return
 
     try {
-      const createRequest = {
-        title: selectedJob.job_title,
-        company: selectedJob.company_name,
-        location: selectedJob.location_raw,
-        job_type: selectedJob.employment_type,
-        description: selectedJob.description_snippet || selectedJob.job_description || '',
-        requirements: selectedJob.required_skills?.join(", ") || "",
-        source: "platform",
-        external_url: selectedJob.application_url,
-        ingested_job_id: selectedJob.id,
-      }
+      // Use the helper method which handles full description and salary
+      const createRequest = jobService.ingestedJobToCreateRequest(selectedJob)
 
       await jobService.saveJob(createRequest)
       toast.success("Job saved to tracker!")
@@ -560,13 +583,112 @@ export function FindJobsInterface() {
                 )}
               </div>
 
-              {/* Job Description */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Job Description</h3>
-                <div className="prose prose-sm max-w-none dark:prose-invert">
-                  <div className="text-sm text-foreground leading-relaxed">
-                    {renderJobDescription(selectedJob.description_snippet || selectedJob.job_description || '')}
+              {/* Job Details Section */}
+              <div className="space-y-6">
+                {/* Salary Information */}
+                {(selectedJob.salary_min || selectedJob.salary_max) && (
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-lg">Salary</h3>
+                    <div className="text-sm text-foreground">
+                      {selectedJob.salary_min && selectedJob.salary_max ? (
+                        <span>
+                          {selectedJob.salary_currency || 'USD'} {selectedJob.salary_min.toLocaleString()} - {selectedJob.salary_max.toLocaleString()}
+                          {selectedJob.salary_period && ` per ${selectedJob.salary_period}`}
+                        </span>
+                      ) : selectedJob.salary_min ? (
+                        <span>
+                          {selectedJob.salary_currency || 'USD'} {selectedJob.salary_min.toLocaleString()}+
+                          {selectedJob.salary_period && ` per ${selectedJob.salary_period}`}
+                        </span>
+                      ) : (
+                        <span>
+                          Up to {selectedJob.salary_currency || 'USD'} {selectedJob.salary_max?.toLocaleString()}
+                          {selectedJob.salary_period && ` per ${selectedJob.salary_period}`}
+                        </span>
+                      )}
+                    </div>
                   </div>
+                )}
+
+                {/* Skills */}
+                {(selectedJob.required_skills && selectedJob.required_skills.length > 0) || 
+                 (selectedJob.preferred_skills && selectedJob.preferred_skills.length > 0) ? (
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-lg">Skills</h3>
+                    <div className="space-y-3">
+                      {selectedJob.required_skills && selectedJob.required_skills.length > 0 && (
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-2">Required:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedJob.required_skills.map((skill, idx) => (
+                              <Badge key={idx} variant="default">{skill}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {selectedJob.preferred_skills && selectedJob.preferred_skills.length > 0 && (
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-2">Preferred:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedJob.preferred_skills.map((skill, idx) => (
+                              <Badge key={idx} variant="secondary">{skill}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : null}
+
+                {/* Experience & Education */}
+                {(selectedJob.years_of_experience_min || selectedJob.years_of_experience_max || selectedJob.education_level) && (
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-lg">Requirements</h3>
+                    <div className="space-y-2 text-sm text-foreground">
+                      {selectedJob.years_of_experience_min || selectedJob.years_of_experience_max ? (
+                        <p>
+                          Experience: {selectedJob.years_of_experience_min && selectedJob.years_of_experience_max
+                            ? `${selectedJob.years_of_experience_min}-${selectedJob.years_of_experience_max} years`
+                            : selectedJob.years_of_experience_min
+                            ? `${selectedJob.years_of_experience_min}+ years`
+                            : `Up to ${selectedJob.years_of_experience_max} years`}
+                        </p>
+                      ) : null}
+                      {selectedJob.education_level && (
+                        <p>Education: {selectedJob.education_level}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Benefits */}
+                {selectedJob.benefits && selectedJob.benefits.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-lg">Benefits</h3>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-foreground">
+                      {selectedJob.benefits.map((benefit, idx) => (
+                        <li key={idx}>{benefit}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Job Description */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg">Job Description</h3>
+                  {isLoadingJobDetails ? (
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                    </div>
+                  ) : (
+                    <div className="prose prose-sm max-w-none dark:prose-invert">
+                      <div className="text-sm text-foreground leading-relaxed">
+                        {renderJobDescription(selectedJob.job_description || selectedJob.description_snippet || '')}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -637,7 +759,15 @@ export function FindJobsInterface() {
                   <h3 className="font-semibold text-base sm:text-lg">Job Description</h3>
                   <div className="prose prose-sm max-w-none dark:prose-invert">
                     <div className="text-sm text-foreground leading-relaxed">
-                      {renderJobDescription(selectedJob.description_snippet || selectedJob.job_description || '')}
+                        {isLoadingJobDetails ? (
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-3/4" />
+                        </div>
+                      ) : (
+                        renderJobDescription(selectedJob.job_description || selectedJob.description_snippet || '')
+                      )}
                     </div>
                   </div>
                 </div>

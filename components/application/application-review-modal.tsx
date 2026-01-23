@@ -84,13 +84,14 @@ export function ApplicationReviewModal({
         } else if (application.job_id) {
           // Fallback to regular job endpoint
           const jobData = await jobService.getJob(application.job_id)
+          const fullDescription = jobData.ingested_job_details?.job_description || jobData.description || ""
           // Convert to IngestedJobResponse format if needed
           setJob({
             id: jobData.id,
             job_title: jobData.title,
             company_name: jobData.company,
             location_raw: jobData.location,
-            job_description: jobData.description || "",
+            job_description: fullDescription,
             application_url: jobData.external_url,
           } as IngestedJobResponse)
         }

@@ -3,6 +3,8 @@ import type { JobApplication, JobListing, JobStatus } from "./types"
 
 // Helper function to map backend JobResponse to frontend JobApplication
 export function mapJobResponseToApplication(job: JobResponse): JobApplication {
+  const fullDescription = job.ingested_job_details?.job_description || job.description
+  
   return {
     id: job.id,
     company: job.company,
@@ -10,9 +12,11 @@ export function mapJobResponseToApplication(job: JobResponse): JobApplication {
     location: job.location,
     status: job.status as JobStatus,
     jobUrl: job.external_url,
-    salary: job.salary_range,
+    salary: job.ingested_job_details?.salary_min && job.ingested_job_details?.salary_max
+      ? `${job.ingested_job_details.salary_currency || 'USD'} ${job.ingested_job_details.salary_min.toLocaleString()} - ${job.ingested_job_details.salary_max.toLocaleString()}${job.ingested_job_details.salary_period ? ` per ${job.ingested_job_details.salary_period}` : ''}`
+      : job.salary_range,
     appliedDate: job.applied_at ? new Date(job.applied_at).toISOString().split('T')[0] : undefined,
-    jobDescription: job.description,
+    jobDescription: fullDescription,
     notes: job.notes || undefined,
     matchScore: job.match_score 
       ? job.match_score >= 80 ? 'HIGH' 
@@ -43,7 +47,7 @@ export function mapIngestedJobToListing(job: IngestedJobResponse): JobListing {
     location: job.location_raw,
     posted,
     url: job.application_url,
-    description: job.job_description,
+    description: job.description_snippet || job.job_description,
   }
 }
 

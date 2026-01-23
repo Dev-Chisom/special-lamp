@@ -58,8 +58,7 @@ export function ResumeTailorStep({
       // Detect if this is a built resume (has 'name' and 'personal_info') or file-based (has 'title' and 'file_url')
       const isBuiltResume = 'name' in resume && 'personal_info' in resume
 
-      // Extract job information
-      const jobDescription = (job as any).description_snippet || (job as any).job_description || ""
+      const jobDescription = (job as any).job_description || (job as any).description_snippet || ""
       const jobTitle = (job as any).job_title || (job as any).title
       const companyName = (job as any).company_name || (job as any).company
 

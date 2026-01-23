@@ -68,7 +68,7 @@ export function JobDetailView({
 
   const handleScan = () => {
     // Navigate to scan page with job context
-    const jobDescription = job.description || job.requirements || ""
+    const jobDescription = job.jobDescription || job.description || job.requirements || ""
     router.push(`/dashboard/scan?jobId=${job.id}&jobDescription=${encodeURIComponent(jobDescription)}`)
     onOpenChange(false) // Close the detail view
   }
@@ -202,6 +202,96 @@ export function JobDetailView({
               Apply
             </Button>
           </div>
+
+          {/* Salary Information */}
+          {(ingestedJob?.salary_min || ingestedJob?.salary_max || job.salary) && (
+            <div className="pt-4 space-y-2">
+              <h3 className="font-semibold text-lg">Salary</h3>
+              <div className="text-sm text-foreground">
+                {ingestedJob?.salary_min && ingestedJob?.salary_max ? (
+                  <span>
+                    {ingestedJob.salary_currency || 'USD'} {ingestedJob.salary_min.toLocaleString()} - {ingestedJob.salary_max.toLocaleString()}
+                    {ingestedJob.salary_period && ` per ${ingestedJob.salary_period}`}
+                  </span>
+                ) : job.salary ? (
+                  <span>{job.salary}</span>
+                ) : ingestedJob?.salary_min ? (
+                  <span>
+                    {ingestedJob.salary_currency || 'USD'} {ingestedJob.salary_min.toLocaleString()}+
+                    {ingestedJob.salary_period && ` per ${ingestedJob.salary_period}`}
+                  </span>
+                ) : ingestedJob?.salary_max ? (
+                  <span>
+                    Up to {ingestedJob.salary_currency || 'USD'} {ingestedJob.salary_max.toLocaleString()}
+                    {ingestedJob.salary_period && ` per ${ingestedJob.salary_period}`}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          )}
+
+          {/* Skills */}
+          {ingestedJob && ((ingestedJob.required_skills && ingestedJob.required_skills.length > 0) || 
+           (ingestedJob.preferred_skills && ingestedJob.preferred_skills.length > 0)) && (
+            <div className="pt-4 space-y-2">
+              <h3 className="font-semibold text-lg">Skills</h3>
+              <div className="space-y-3">
+                {ingestedJob.required_skills && ingestedJob.required_skills.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Required:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {ingestedJob.required_skills.map((skill, idx) => (
+                        <Badge key={idx} variant="default">{skill}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {ingestedJob.preferred_skills && ingestedJob.preferred_skills.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Preferred:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {ingestedJob.preferred_skills.map((skill, idx) => (
+                        <Badge key={idx} variant="secondary">{skill}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Experience & Education */}
+          {ingestedJob && (ingestedJob.years_of_experience_min || ingestedJob.years_of_experience_max || ingestedJob.education_level) && (
+            <div className="pt-4 space-y-2">
+              <h3 className="font-semibold text-lg">Requirements</h3>
+              <div className="space-y-2 text-sm text-foreground">
+                {ingestedJob.years_of_experience_min || ingestedJob.years_of_experience_max ? (
+                  <p>
+                    Experience: {ingestedJob.years_of_experience_min && ingestedJob.years_of_experience_max
+                      ? `${ingestedJob.years_of_experience_min}-${ingestedJob.years_of_experience_max} years`
+                      : ingestedJob.years_of_experience_min
+                      ? `${ingestedJob.years_of_experience_min}+ years`
+                      : `Up to ${ingestedJob.years_of_experience_max} years`}
+                  </p>
+                ) : null}
+                {ingestedJob.education_level && (
+                  <p>Education: {ingestedJob.education_level}</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Benefits */}
+          {ingestedJob && ingestedJob.benefits && ingestedJob.benefits.length > 0 && (
+            <div className="pt-4 space-y-2">
+              <h3 className="font-semibold text-lg">Benefits</h3>
+              <ul className="list-disc list-inside space-y-1 text-sm text-foreground">
+                {ingestedJob.benefits.map((benefit, idx) => (
+                  <li key={idx}>{benefit}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Job Description */}
           {job.jobDescription ? (
