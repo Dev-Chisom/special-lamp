@@ -14,6 +14,7 @@ import { MapPin, Briefcase, Archive, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { jobService, type IngestedJobResponse } from "@/services/job.service"
 import type { JobApplication, JobListing } from "./types"
+import { formatSalary } from "@/lib/job-utils"
 
 interface JobDetailViewProps {
   job: JobApplication | null
@@ -166,7 +167,7 @@ export function JobDetailView({
 
         {/* Job Info */}
         <div className="space-y-4">
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
             {job.location && (
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
@@ -178,6 +179,16 @@ export function JobDetailView({
               <span>Full-time</span>
             </span>
           </div>
+
+          {/* Salary Information */}
+          {(ingestedJob?.salary_min || ingestedJob?.salary_max || job.salary) && (
+            <div className="flex items-center gap-2 text-base font-semibold text-primary p-3 bg-primary/10 rounded-lg">
+              <span>💰</span>
+              <span>
+                {ingestedJob ? formatSalary(ingestedJob) : job.salary || "Salary not specified"}
+              </span>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex gap-2 pt-2">
@@ -203,32 +214,7 @@ export function JobDetailView({
             </Button>
           </div>
 
-          {/* Salary Information */}
-          {(ingestedJob?.salary_min || ingestedJob?.salary_max || job.salary) && (
-            <div className="pt-4 space-y-2">
-              <h3 className="font-semibold text-lg">Salary</h3>
-              <div className="text-sm text-foreground">
-                {ingestedJob?.salary_min && ingestedJob?.salary_max ? (
-                  <span>
-                    {ingestedJob.salary_currency || 'USD'} {ingestedJob.salary_min.toLocaleString()} - {ingestedJob.salary_max.toLocaleString()}
-                    {ingestedJob.salary_period && ` per ${ingestedJob.salary_period}`}
-                  </span>
-                ) : job.salary ? (
-                  <span>{job.salary}</span>
-                ) : ingestedJob?.salary_min ? (
-                  <span>
-                    {ingestedJob.salary_currency || 'USD'} {ingestedJob.salary_min.toLocaleString()}+
-                    {ingestedJob.salary_period && ` per ${ingestedJob.salary_period}`}
-                  </span>
-                ) : ingestedJob?.salary_max ? (
-                  <span>
-                    Up to {ingestedJob.salary_currency || 'USD'} {ingestedJob.salary_max.toLocaleString()}
-                    {ingestedJob.salary_period && ` per ${ingestedJob.salary_period}`}
-                  </span>
-                ) : null}
-              </div>
-            </div>
-          )}
+          {/* Salary Information - Already shown above, but keep section for consistency if needed */}
 
           {/* Skills */}
           {ingestedJob && ((ingestedJob.required_skills && ingestedJob.required_skills.length > 0) || 

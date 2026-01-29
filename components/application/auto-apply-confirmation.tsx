@@ -16,6 +16,8 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertTriangle, FileText, Building2, Briefcase } from "lucide-react"
 import type { Resume } from "@/services/resume.service"
+import { formatSalary } from "@/lib/job-utils"
+import type { IngestedJobResponse } from "@/services/job.service"
 
 interface AutoApplyConfirmationProps {
   resume: Resume
@@ -43,6 +45,7 @@ export function AutoApplyConfirmation({
   const jobTitle = (job as any).job_title || (job as any).title || "this position"
   const companyName = (job as any).company_name || (job as any).company || "this company"
   const location = (job as any).location_raw || (job as any).location || ""
+  const hasSalary = (job as IngestedJobResponse).salary_min || (job as IngestedJobResponse).salary_max
 
   return (
     <Dialog open={true} onOpenChange={() => onCancel()}>
@@ -73,6 +76,12 @@ export function AutoApplyConfirmation({
                     <span>{location}</span>
                   )}
                 </div>
+                {hasSalary && (
+                  <div className="flex items-center gap-2 text-sm font-medium text-primary mt-2">
+                    <span>💰</span>
+                    <span>{formatSalary(job as IngestedJobResponse)}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

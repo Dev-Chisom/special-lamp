@@ -1,5 +1,6 @@
 import type { JobResponse, IngestedJobResponse } from "@/services/job.service"
 import type { JobApplication, JobListing, JobStatus } from "./types"
+import { formatSalary } from "@/lib/job-utils"
 
 // Helper function to map backend JobResponse to frontend JobApplication
 export function mapJobResponseToApplication(job: JobResponse): JobApplication {
@@ -12,8 +13,13 @@ export function mapJobResponseToApplication(job: JobResponse): JobApplication {
     location: job.location,
     status: job.status as JobStatus,
     jobUrl: job.external_url,
-    salary: job.ingested_job_details?.salary_min && job.ingested_job_details?.salary_max
-      ? `${job.ingested_job_details.salary_currency || 'USD'} ${job.ingested_job_details.salary_min.toLocaleString()} - ${job.ingested_job_details.salary_max.toLocaleString()}${job.ingested_job_details.salary_period ? ` per ${job.ingested_job_details.salary_period}` : ''}`
+    salary: job.ingested_job_details?.salary_min || job.ingested_job_details?.salary_max
+      ? formatSalary({
+          salary_min: job.ingested_job_details.salary_min,
+          salary_max: job.ingested_job_details.salary_max,
+          salary_currency: job.ingested_job_details.salary_currency,
+          salary_period: job.ingested_job_details.salary_period,
+        })
       : job.salary_range,
     appliedDate: job.applied_at ? new Date(job.applied_at).toISOString().split('T')[0] : undefined,
     jobDescription: fullDescription,

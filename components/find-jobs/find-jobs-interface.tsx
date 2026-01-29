@@ -43,6 +43,7 @@ import { toast } from "sonner"
 import { jobService, type IngestedJobResponse } from "@/services/job.service"
 import { mapIngestedJobToListing } from "@/components/job-tracker/utils"
 import type { JobListing } from "@/components/job-tracker/types"
+import { formatSalary } from "@/lib/job-utils"
 
 
 export function FindJobsInterface() {
@@ -450,12 +451,18 @@ export function FindJobsInterface() {
                     <CardContent className="p-4">
                       <h3 className="font-semibold text-sm mb-1">{job.job_title}</h3>
                       <p className="text-xs text-muted-foreground mb-2">{job.company_name}</p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                         <MapPin className="h-3 w-3" />
                         <span>{job.location_raw}</span>
                         <span>•</span>
                         <span>{formatPostedDate(job.date_posted)}</span>
-                  </div>
+                      </div>
+                      {(job.salary_min || job.salary_max) && (
+                        <div className="flex items-center gap-1 text-xs font-medium text-primary mb-2">
+                          <span>💰</span>
+                          <span>{formatSalary(job)}</span>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))
@@ -544,7 +551,7 @@ export function FindJobsInterface() {
               <div>
                 <h2 className="text-xl font-bold mb-2">{selectedJob.job_title}</h2>
                 <p className="text-muted-foreground mb-4">{selectedJob.company_name}</p>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-3">
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
                     <span>{selectedJob.location_raw}</span>
@@ -554,8 +561,20 @@ export function FindJobsInterface() {
                     <span className="capitalize">
                       {selectedJob.employment_type.replace("_", "-")}
                       </span>
+                  </div>
+                  {selectedJob.seniority_level && (
+                    <div className="flex items-center gap-2">
+                      <span>👤</span>
+                      <span className="capitalize">{selectedJob.seniority_level}</span>
                     </div>
+                  )}
                 </div>
+                {(selectedJob.salary_min || selectedJob.salary_max) && (
+                  <div className="flex items-center gap-2 text-base font-semibold text-primary mb-4 p-3 bg-primary/10 rounded-lg">
+                    <span>💰</span>
+                    <span>{formatSalary(selectedJob)}</span>
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}
@@ -585,30 +604,7 @@ export function FindJobsInterface() {
 
               {/* Job Details Section */}
               <div className="space-y-6">
-                {/* Salary Information */}
-                {(selectedJob.salary_min || selectedJob.salary_max) && (
-                  <div className="space-y-2">
-                    <h3 className="font-semibold text-lg">Salary</h3>
-                    <div className="text-sm text-foreground">
-                      {selectedJob.salary_min && selectedJob.salary_max ? (
-                        <span>
-                          {selectedJob.salary_currency || 'USD'} {selectedJob.salary_min.toLocaleString()} - {selectedJob.salary_max.toLocaleString()}
-                          {selectedJob.salary_period && ` per ${selectedJob.salary_period}`}
-                        </span>
-                      ) : selectedJob.salary_min ? (
-                        <span>
-                          {selectedJob.salary_currency || 'USD'} {selectedJob.salary_min.toLocaleString()}+
-                          {selectedJob.salary_period && ` per ${selectedJob.salary_period}`}
-                        </span>
-                      ) : (
-                        <span>
-                          Up to {selectedJob.salary_currency || 'USD'} {selectedJob.salary_max?.toLocaleString()}
-                          {selectedJob.salary_period && ` per ${selectedJob.salary_period}`}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
+                {/* Salary Information - Already shown in header, but keep for mobile view consistency */}
 
                 {/* Skills */}
                 {(selectedJob.required_skills && selectedJob.required_skills.length > 0) || 
@@ -717,18 +713,32 @@ export function FindJobsInterface() {
 
               <div className="space-y-4 sm:space-y-6 mt-4 sm:mt-6">
                 {/* Job Info */}
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
                     <span>{selectedJob.location_raw}</span>
-                    </div>
+                  </div>
                   <div className="flex items-center gap-2">
                     <Briefcase className="h-4 w-4" />
                     <span className="capitalize">
                       {selectedJob.employment_type.replace("_", "-")}
                     </span>
                   </div>
+                  {selectedJob.seniority_level && (
+                    <div className="flex items-center gap-2">
+                      <span>👤</span>
+                      <span className="capitalize">{selectedJob.seniority_level}</span>
+                    </div>
+                  )}
                 </div>
+
+                {/* Salary - Mobile View */}
+                {(selectedJob.salary_min || selectedJob.salary_max) && (
+                  <div className="flex items-center gap-2 text-base font-semibold text-primary p-3 bg-primary/10 rounded-lg">
+                    <span>💰</span>
+                    <span>{formatSalary(selectedJob)}</span>
+                  </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="flex flex-col gap-2">

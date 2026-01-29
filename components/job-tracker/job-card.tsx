@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { MapPin, Edit, Trash2 } from "lucide-react"
 import type { JobApplication } from "./types"
+import { formatSalary } from "@/lib/job-utils"
 
 interface JobCardProps {
   job: JobApplication
@@ -63,10 +64,16 @@ export function JobCard({ job, onEdit, onDelete, onClick }: JobCardProps) {
           )}
           <h3 className="font-semibold text-sm mb-1">{job.position}</h3>
           <p className="text-xs text-muted-foreground mb-2">{job.company}</p>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
             <MapPin className="h-3 w-3" />
             <span>{job.location}</span>
           </div>
+          {job.salary && (
+            <div className="flex items-center gap-1 text-xs font-medium text-primary mb-3">
+              <span>💰</span>
+              <span>{job.salary}</span>
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
