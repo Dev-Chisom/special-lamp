@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { resumeService, type ResumeBuild } from "@/services/resume.service"
+import { resumeService, type ResumeBuild, type ChangeSummary } from "@/services/resume.service"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,7 +14,10 @@ import {
 } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Loader2, Sparkles, RefreshCw, FileText } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Loader2, Sparkles, RefreshCw, FileText, CheckCircle2, ChevronDown, ChevronUp, Plus, Minus, Edit, GraduationCap } from "lucide-react"
 import { backendToFrontend } from "@/components/resume-builder/resume-data-utils"
 import { getTemplateRenderer } from "@/components/resume-builder/template-renderers"
 import { config } from "@/lib/config"
@@ -37,6 +40,8 @@ export function ResumeTailorStep({
 }: ResumeTailorStepProps) {
   const [tailoring, setTailoring] = useState(false)
   const [tailoredResume, setTailoredResume] = useState<Resume | null>(null)
+  const [changeSummary, setChangeSummary] = useState<ChangeSummary | null>(null)
+  const [showDetailedChanges, setShowDetailedChanges] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const hasTailoredRef = useRef(false)
 
@@ -103,7 +108,19 @@ export function ResumeTailorStep({
       
       // Set the tailored resume (convert ResumeBuild to Resume if needed for type compatibility)
       setTailoredResume(tailored as Resume)
-      toast.success("Resume tailored successfully!")
+      
+      // Extract and set change summary if available
+      const summary = (tailored as any).change_summary as ChangeSummary | undefined
+      if (summary) {
+        setChangeSummary(summary)
+        if (summary.has_changes && summary.summary) {
+          toast.success(`Resume tailored! ${summary.summary}`)
+        } else {
+          toast.success("Resume tailored successfully! No changes needed - resume already well-matched.")
+        }
+      } else {
+        toast.success("Resume tailored successfully!")
+      }
       
     } catch (error: any) {
       console.error("Failed to tailor resume:", error)
@@ -160,12 +177,105 @@ export function ResumeTailorStep({
               </Button>
             </div>
           ) : tailoredResume ? (
-            <Tabs defaultValue="tailored" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="tailored">Tailored Resume</TabsTrigger>
-                <TabsTrigger value="original">Original Resume</TabsTrigger>
-                <TabsTrigger value="info">About Tailoring</TabsTrigger>
-              </TabsList>
+            <div className="space-y-4">
+              {/* Change Summary Alert */}
+              {changeSummary && changeSummary.has_changes && (
+                <Alert className="bg-primary/5 border-primary/20">
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
+                  <AlertTitle className="text-primary">Resume Tailored Successfully!</AlertTitle>
+                  <AlertDescription className="mt-2">
+                    <p className="font-medium mb-2">{changeSummary.summary}</p>
+                    {changeSummary.change_count > 0 && (
+                      <p className="text-sm text-muted-foreground mb-3">
+                        {changeSummary.change_count} change{changeSummary.change_count !== 1 ? 's' : ''} made
+                      </p>
+                    )}
+                    <Collapsible open={showDetailedChanges} onOpenChange={setShowDetailedChanges}>
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-auto p-0 text-primary hover:text-primary/80">
+                          {showDetailedChanges ? (
+                            <>
+                              <ChevronUp className="h-4 w-4 mr-1" />
+                              Hide Details
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="h-4 w-4 mr-1" />
+                              View Details
+                            </>
+                          )}
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="mt-3 space-y-3">
+                        {changeSummary.changes.map((change, index) => (
+                          <div key={index} className="bg-background border rounded-lg p-3 space-y-2">
+                            <div className="flex items-center gap-2">
+                              {change.type === 'skills_added' && <Plus className="h-4 w-4 text-green-600" />}
+                              {change.type === 'skills_removed' && <Minus className="h-4 w-4 text-red-600" />}
+                              {(change.type === 'summary_updated' || change.type === 'experience_updated') && <Edit className="h-4 w-4 text-blue-600" />}
+                              {change.type === 'education_updated' && <GraduationCap className="h-4 w-4 text-purple-600" />}
+                              <Badge variant="outline" className="text-xs">
+                                {change.type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                              </Badge>
+                            </div>
+                            <p className="text-sm font-medium">{change.description}</p>
+                            {change.added && change.added.length > 0 && (
+                              <div className="text-sm text-muted-foreground">
+                                <span className="font-medium text-green-600">Added: </span>
+                                {change.added.join(', ')}
+                              </div>
+                            )}
+                            {change.removed && change.removed.length > 0 && (
+                              <div className="text-sm text-muted-foreground">
+                                <span className="font-medium text-red-600">Removed: </span>
+                                {change.removed.join(', ')}
+                              </div>
+                            )}
+                            {change.original && change.tailored && (
+                              <div className="space-y-2 text-sm">
+                                <div>
+                                  <span className="font-medium text-muted-foreground">Original: </span>
+                                  <p className="text-muted-foreground mt-1 bg-muted/50 p-2 rounded">{change.original.substring(0, 200)}{change.original.length > 200 ? '...' : ''}</p>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-primary">Tailored: </span>
+                                  <p className="text-primary mt-1 bg-primary/5 p-2 rounded">{change.tailored.substring(0, 200)}{change.tailored.length > 200 ? '...' : ''}</p>
+                                </div>
+                                {change.similarity !== undefined && (
+                                  <p className="text-xs text-muted-foreground">
+                                    Similarity: {change.similarity.toFixed(1)}%
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                            {change.title && change.company && (
+                              <p className="text-xs text-muted-foreground">
+                                {change.title} at {change.company}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </AlertDescription>
+                </Alert>
+              )}
+              {changeSummary && !changeSummary.has_changes && (
+                <Alert>
+                  <CheckCircle2 className="h-4 w-4" />
+                  <AlertTitle>No Changes Needed</AlertTitle>
+                  <AlertDescription>
+                    Your resume is already well-matched for this position. No changes were made.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              <Tabs defaultValue="tailored" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="tailored">Tailored Resume</TabsTrigger>
+                  <TabsTrigger value="original">Original Resume</TabsTrigger>
+                  <TabsTrigger value="info">About Tailoring</TabsTrigger>
+                </TabsList>
               
               <TabsContent value="tailored" className="mt-4 space-y-4">
                 <div className="border rounded-lg p-4 bg-muted/30">
@@ -341,7 +451,8 @@ export function ResumeTailorStep({
                   </p>
                 </div>
               </TabsContent>
-            </Tabs>
+              </Tabs>
+            </div>
           ) : null}
         </div>
 

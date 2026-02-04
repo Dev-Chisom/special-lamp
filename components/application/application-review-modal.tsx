@@ -31,6 +31,7 @@ import { applicationService, type ApplicationRun } from "@/services/application.
 import { jobService, type IngestedJobResponse } from "@/services/job.service"
 import { resumeService, type Resume } from "@/services/resume.service"
 import { toast } from "sonner"
+import { config } from "@/lib/config"
 
 // Extract resume_id from application (could be in log_entries or metadata)
 function extractResumeId(app: ApplicationRun): string | null {
@@ -280,7 +281,16 @@ export function ApplicationReviewModal({
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(resume.file_url, '_blank')}
+                        onClick={() => {
+                          // Append token to file URL for authenticated access
+                          const token = typeof window !== 'undefined' 
+                            ? localStorage.getItem(config.auth.tokenKeys.accessToken) 
+                            : null
+                          const displayUrl = token 
+                            ? `${resume.file_url}${resume.file_url.includes('?') ? '&' : '?'}token=${token}`
+                            : resume.file_url
+                          window.open(displayUrl, '_blank')
+                        }}
                         className="w-full sm:w-auto"
                       >
                         <Eye className="h-4 w-4 mr-2" />

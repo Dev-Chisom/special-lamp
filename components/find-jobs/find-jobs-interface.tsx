@@ -38,7 +38,18 @@ import {
   ExternalLink,
   Filter,
   ArrowUpDown,
+  GraduationCap,
+  Target,
+  TrendingUp,
+  MapPin as LocationIcon,
 } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { toast } from "sonner"
 import { jobService, type IngestedJobResponse } from "@/services/job.service"
 import { mapIngestedJobToListing } from "@/components/job-tracker/utils"
@@ -605,6 +616,143 @@ export function FindJobsInterface() {
               {/* Job Details Section */}
               <div className="space-y-6">
                 {/* Salary Information - Already shown in header, but keep for mobile view consistency */}
+
+                {/* Match Score Breakdown */}
+                {(selectedJob.match_score !== undefined || 
+                  selectedJob.skills_match !== undefined || 
+                  selectedJob.role_match !== undefined || 
+                  selectedJob.experience_match !== undefined || 
+                  selectedJob.education_match !== undefined || 
+                  selectedJob.location_match !== undefined) && (
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-lg">Match Score</h3>
+                    {selectedJob.match_score !== undefined && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Overall Match</span>
+                          <span className="text-lg font-bold text-primary">{Math.round(selectedJob.match_score)}%</span>
+                        </div>
+                        <Progress value={selectedJob.match_score} className="h-3" />
+                      </div>
+                    )}
+                    {(selectedJob.skills_match !== undefined || 
+                      selectedJob.role_match !== undefined || 
+                      selectedJob.experience_match !== undefined || 
+                      selectedJob.education_match !== undefined || 
+                      selectedJob.location_match !== undefined) && (
+                      <div className="space-y-3 pt-2 border-t">
+                        <p className="text-sm font-medium text-muted-foreground">Breakdown:</p>
+                        <div className="space-y-2">
+                          {selectedJob.skills_match !== undefined && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="space-y-1">
+                                    <div className="flex items-center justify-between text-sm">
+                                      <div className="flex items-center gap-2">
+                                        <Target className="h-4 w-4 text-muted-foreground" />
+                                        <span>Skills Match</span>
+                                      </div>
+                                      <span className="font-medium">{Math.round(selectedJob.skills_match)}%</span>
+                                    </div>
+                                    <Progress value={selectedJob.skills_match} className="h-2" />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>How well your skills match the job requirements</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                          {selectedJob.role_match !== undefined && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="space-y-1">
+                                    <div className="flex items-center justify-between text-sm">
+                                      <div className="flex items-center gap-2">
+                                        <Briefcase className="h-4 w-4 text-muted-foreground" />
+                                        <span>Role Match</span>
+                                      </div>
+                                      <span className="font-medium">{Math.round(selectedJob.role_match)}%</span>
+                                    </div>
+                                    <Progress value={selectedJob.role_match} className="h-2" />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>How well your experience aligns with the role</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                          {selectedJob.experience_match !== undefined && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="space-y-1">
+                                    <div className="flex items-center justify-between text-sm">
+                                      <div className="flex items-center gap-2">
+                                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                                        <span>Experience Match</span>
+                                      </div>
+                                      <span className="font-medium">{Math.round(selectedJob.experience_match)}%</span>
+                                    </div>
+                                    <Progress value={selectedJob.experience_match} className="h-2" />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>How well your years of experience match the requirements</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                          {selectedJob.education_match !== undefined && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="space-y-1">
+                                    <div className="flex items-center justify-between text-sm">
+                                      <div className="flex items-center gap-2">
+                                        <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                                        <span>Education Match</span>
+                                      </div>
+                                      <span className="font-medium">{Math.round(selectedJob.education_match)}%</span>
+                                    </div>
+                                    <Progress value={selectedJob.education_match} className="h-2" />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Education match considers degree level (Bachelor's, Master's, PhD) and field of study</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                          {selectedJob.location_match !== undefined && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="space-y-1">
+                                    <div className="flex items-center justify-between text-sm">
+                                      <div className="flex items-center gap-2">
+                                        <LocationIcon className="h-4 w-4 text-muted-foreground" />
+                                        <span>Location Match</span>
+                                      </div>
+                                      <span className="font-medium">{Math.round(selectedJob.location_match)}%</span>
+                                    </div>
+                                    <Progress value={selectedJob.location_match} className="h-2" />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>How well the job location matches your preferences</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Skills */}
                 {(selectedJob.required_skills && selectedJob.required_skills.length > 0) || 

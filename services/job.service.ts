@@ -117,6 +117,13 @@ export interface IngestedJobResponse {
   years_of_experience_min?: number;
   years_of_experience_max?: number;
   keywords?: string[];
+  // Match scores (when job is matched with user's resume)
+  match_score?: number;
+  skills_match?: number;
+  role_match?: number;
+  experience_match?: number;
+  education_match?: number;
+  location_match?: number;
 }
 
 export interface PaginatedResponse<T> {

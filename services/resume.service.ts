@@ -21,7 +21,44 @@ export interface Resume {
   is_primary?: boolean;
   created_at: string;
   updated_at: string;
+  change_summary?: ChangeSummary;
 }
+
+// ============================================================================
+// Change Summary Types (for Resume Tailoring)
+// ============================================================================
+
+export interface ChangeSummary {
+  changes: ChangeItem[];
+  summary: string;
+  change_count: number;
+  has_changes: boolean;
+}
+
+export interface ChangeItem {
+  type: ChangeType;
+  field: string;
+  description: string;
+  // For skills_added/removed
+  added?: string[];
+  removed?: string[];
+  // For summary_updated
+  original?: string;
+  tailored?: string;
+  similarity?: number;
+  // For experience_updated
+  index?: number;
+  title?: string;
+  company?: string;
+}
+
+export type ChangeType = 
+  | 'skills_added'
+  | 'skills_removed'
+  | 'summary_updated'
+  | 'experience_updated'
+  | 'experience_bullets_updated'
+  | 'education_updated';
 
 export interface UploadResumeRequest {
   file: File;
