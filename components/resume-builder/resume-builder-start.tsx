@@ -8,6 +8,7 @@ import { Plus, /* Linkedin, */ Upload, FileText, Sparkles } from "lucide-react"
 import { resumeService } from "@/services/resume.service"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import type { ApiClientError } from "@/services/api-client"
 
 interface ResumeBuilderStartProps {
   onStartBuilding: () => void
@@ -56,7 +57,11 @@ export function ResumeBuilderStart({
       }, 500)
     } catch (error: any) {
       console.error("Failed to import resume:", error)
-      toast.error(error?.message || "Failed to import resume")
+      // Error messages are now user-friendly from the backend - display directly
+      const errorMessage = error instanceof Error && 'getGeneralError' in error
+        ? (error as ApiClientError).getGeneralError()
+        : error?.message || "Something went wrong. Please try again."
+      toast.error(errorMessage)
     } finally {
       setIsImporting(false)
       // Reset file input

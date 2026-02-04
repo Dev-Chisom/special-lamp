@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Upload, FileText, X } from "lucide-react"
 import type { Resume } from "@/services/resume.service"
+import type { ApiClientError } from "@/services/api-client"
 
 interface ResumeUploadStepProps {
   job: any
@@ -73,8 +74,12 @@ export function ResumeUploadStep({
       onResumeUploaded(resume)
     } catch (error: any) {
       console.error("Failed to upload resume:", error)
-      setError(error?.message || "Failed to upload resume. Please try again.")
-      toast.error(error?.message || "Failed to upload resume")
+      // Error messages are now user-friendly from the backend - display directly
+      const errorMessage = error instanceof Error && 'getGeneralError' in error
+        ? (error as ApiClientError).getGeneralError()
+        : error?.message || "Something went wrong. Please try again."
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setUploading(false)
     }

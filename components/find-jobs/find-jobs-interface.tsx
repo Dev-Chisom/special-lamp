@@ -324,10 +324,10 @@ export function FindJobsInterface() {
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-1 flex flex-col xl:flex-row gap-4 xl:gap-6 min-h-0 p-4 md:p-6">
+    <div className="h-screen flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col xl:flex-row min-h-0 p-4 md:p-6 gap-0">
         {/* Center Column - Job Listings */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* Header */}
           <div className="mb-4 md:mb-6">
             <h1 className="text-xl md:text-2xl font-bold mb-2">Jobs</h1>
@@ -408,25 +408,25 @@ export function FindJobsInterface() {
           </div>
 
           {/* Results Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-4 pr-4">
             <p className="text-xs sm:text-sm text-muted-foreground">
               Showing {totalJobs > 0 ? `${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, totalJobs)}` : 0} of {totalJobs} jobs sorted by {sortBy === "relevance" ? "match score" : sortBy}
             </p>
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-full sm:w-[150px]">
                 <ArrowUpDown className="h-4 w-4 mr-2" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
                 <SelectItem value="relevance">Relevance</SelectItem>
-            <SelectItem value="recent">Most Recent</SelectItem>
-            <SelectItem value="salary">Highest Salary</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+                <SelectItem value="recent">Most Recent</SelectItem>
+                <SelectItem value="salary">Highest Salary</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
       {/* Job Listings */}
-          <ScrollArea className="flex-1">
+          <ScrollArea className="flex-1 min-h-0">
             <div className="space-y-3 pr-4">
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
@@ -555,9 +555,10 @@ export function FindJobsInterface() {
                     </div>
 
         {/* Right Column - Job Details */}
-        <div className="hidden xl:flex w-[500px] min-w-[500px] border-l bg-background flex flex-col sticky top-0 self-start max-h-screen overflow-y-auto">
+        <div className="hidden xl:flex w-[500px] min-w-[500px] border-l bg-background flex flex-col h-full overflow-hidden">
           {selectedJob ? (
-            <div className="p-6 space-y-6">
+            <ScrollArea className="flex-1">
+              <div className="p-6 space-y-6">
               {/* Job Header */}
               <div>
                 <h2 className="text-xl font-bold mb-2">{selectedJob.job_title}</h2>
@@ -817,8 +818,8 @@ export function FindJobsInterface() {
                   </div>
                 )}
 
-                {/* Job Description */}
-                <div className="space-y-4">
+                {/* Job Description - Hidden for now */}
+                {/* <div className="space-y-4">
                   <h3 className="font-semibold text-lg">Job Description</h3>
                   {isLoadingJobDetails ? (
                     <div className="space-y-2">
@@ -833,11 +834,12 @@ export function FindJobsInterface() {
                       </div>
                     </div>
                   )}
-                </div>
+                </div> */}
               </div>
-            </div>
+              </div>
+            </ScrollArea>
           ) : (
-            <div className="flex-1 flex items-center justify-center p-6">
+            <div className="flex-1 flex items-center justify-center p-6 h-full">
               <div className="text-center text-muted-foreground">
                 <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>Select a job to view details</p>
@@ -912,8 +914,8 @@ export function FindJobsInterface() {
                   )}
                 </div>
 
-                {/* Job Description */}
-                <div className="space-y-4">
+                {/* Job Description - Hidden for now */}
+                {/* <div className="space-y-4">
                   <h3 className="font-semibold text-base sm:text-lg">Job Description</h3>
                   <div className="prose prose-sm max-w-none dark:prose-invert">
                     <div className="text-sm text-foreground leading-relaxed">
@@ -928,7 +930,7 @@ export function FindJobsInterface() {
                       )}
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
             </SheetContent>
           </Sheet>

@@ -18,6 +18,7 @@ import { resumeService } from "@/services/resume.service"
 import { jobService } from "@/services/job.service"
 import { mapIngestedJobToListing } from "./utils"
 import type { JobListing } from "./types"
+import type { ApiClientError } from "@/services/api-client"
 
 interface EmptyStateProps {
   onJobListingsUpdate?: (listings: JobListing[]) => void
@@ -77,7 +78,11 @@ export function EmptyState({ onJobListingsUpdate }: EmptyStateProps) {
       }
     } catch (error: any) {
       console.error("Resume upload error:", error)
-      toast.error(error?.message || "Failed to upload resume. Please try again.")
+      // Error messages are now user-friendly from the backend - display directly
+      const errorMessage = error instanceof Error && 'getGeneralError' in error
+        ? (error as any).getGeneralError()
+        : error?.message || "Something went wrong. Please try again."
+      toast.error(errorMessage)
     } finally {
       setIsUploading(false)
     }
