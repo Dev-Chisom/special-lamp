@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume - {{personalInfo.firstName}} {{personalInfo.lastName}}</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      background-color: white;
+      color: #111827;
+      padding: 2.5rem;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      width: 816px;
+      min-height: 1056px;
+    }
+    .header {
+      margin-bottom: 2rem;
+    }
+    .header h1 {
+      font-size: 2.25rem;
+      font-weight: 300;
+      margin-bottom: 0.5rem;
+      margin-top: 0;
+      letter-spacing: 0.05em;
+      color: #111827;
+    }
+    .header .contact {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      font-size: 0.75rem;
+      color: #4b5563;
+    }
+    .section {
+      margin-bottom: 2rem;
+      page-break-inside: avoid;
+    }
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+      color: #6b7280;
+    }
+    .summary-text {
+      color: #374151;
+      line-height: 1.75;
+      font-size: 0.875rem;
+    }
+    .experience-item, .education-item {
+      margin-bottom: 1.5rem;
+      page-break-inside: avoid;
+    }
+    .experience-header, .education-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.5rem;
+    }
+    .job-title, .degree {
+      font-weight: 500;
+      font-size: 1rem;
+      color: #111827;
+    }
+    .company, .school {
+      color: #4b5563;
+      font-size: 0.75rem;
+    }
+    .date {
+      color: #6b7280;
+      font-size: 0.75rem;
+    }
+    .description {
+      margin-top: 0.5rem;
+      color: #374151;
+      white-space: pre-line;
+      font-size: 0.75rem;
+      line-height: 1.75;
+    }
+    .skills-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .skill-item {
+      color: #374151;
+      font-size: 0.75rem;
+    }
+    .skill-separator {
+      margin: 0 0.25rem;
+    }
+    @media print {
+      body {
+        padding: 0.5rem;
+      }
+      .section {
+        page-break-inside: avoid;
+      }
+      .experience-item, .education-item {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <h1>{{personalInfo.firstName}} {{personalInfo.lastName}}</h1>
+    <div class="contact">
+      {{#if personalInfo.email}}<span>{{personalInfo.email}}</span>{{/if}}
+      {{#if personalInfo.phone}}<span>|</span><span>{{personalInfo.phone}}</span>{{/if}}
+      {{#if personalInfo.location}}<span>|</span><span>{{personalInfo.location}}</span>{{/if}}
+      {{#if personalInfo.linkedin}}<span>|</span><span>{{personalInfo.linkedin}}</span>{{/if}}
+    </div>
+  </div>
+
+  <!-- Summary -->
+  {{#if summary}}
+  <div class="section">
+    <p class="summary-text">{{summary}}</p>
+  </div>
+  {{/if}}
+
+  <!-- Experience -->
+  {{#if experience}}
+  {{#if experience.length}}
+  <div class="section">
+    <h2 class="section-title">Experience</h2>
+    {{#each experience}}
+    <div class="experience-item">
+      <div class="experience-header">
+        <div>
+          <div class="job-title">{{jobTitle}}</div>
+          <div class="company">{{company}}</div>
+        </div>
+        <span class="date">
+          {{startDate}} - {{#if isCurrent}}Present{{else}}{{endDate}}{{/if}}
+        </span>
+      </div>
+      {{#if description}}
+      <div class="description">{{description}}</div>
+      {{/if}}
+    </div>
+    {{/each}}
+  </div>
+  {{/if}}
+  {{/if}}
+
+  <!-- Education -->
+  {{#if education}}
+  {{#if education.length}}
+  <div class="section">
+    <h2 class="section-title">Education</h2>
+    {{#each education}}
+    <div class="education-item">
+      <div class="education-header">
+        <div>
+          <div class="degree">{{degree}}</div>
+          <div class="school">{{school}}</div>
+        </div>
+        <span class="date">
+          {{startYear}} - {{#if isCurrent}}Present{{else}}{{endYear}}{{/if}}
+        </span>
+      </div>
+    </div>
+    {{/each}}
+  </div>
+  {{/if}}
+  {{/if}}
+
+  <!-- Skills -->
+  {{#if skills}}
+  {{#if skills.length}}
+  <div class="section">
+    <h2 class="section-title">Skills</h2>
+    <div class="skills-container">
+      {{#each skills}}
+      <span class="skill-item">{{this}}{{#unless @last}}<span class="skill-separator">•</span>{{/unless}}</span>
+      {{/each}}
+    </div>
+  </div>
+  {{/if}}
+  {{/if}}
+</body>
+</html>
