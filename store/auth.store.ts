@@ -73,8 +73,13 @@ export const useAuthStore = create<AuthState>()(
             lastFetchTime: Date.now(),
           });
           // Broadcast sign in to other tabs (only if not handling a broadcast)
+          // Include tokens so other tabs can sync them
           if (!isHandlingBroadcast) {
-            authBroadcast.broadcastSignIn(response.user);
+            authBroadcast.broadcastSignIn(
+              response.user, 
+              response.access_token, 
+              response.refresh_token
+            );
           }
         } catch (error: any) {
           set({
@@ -99,8 +104,13 @@ export const useAuthStore = create<AuthState>()(
             lastFetchTime: Date.now(),
           });
           // Broadcast sign up to other tabs (only if not handling a broadcast)
+          // Include tokens so other tabs can sync them
           if (!isHandlingBroadcast) {
-            authBroadcast.broadcastSignUp(response.user);
+            authBroadcast.broadcastSignUp(
+              response.user, 
+              response.access_token, 
+              response.refresh_token
+            );
           }
         } catch (error: any) {
           set({
@@ -298,9 +308,20 @@ if (typeof window !== 'undefined') {
       switch (message.type) {
         case 'SIGN_IN':
         case 'SIGN_UP':
+          // Store tokens if provided in broadcast
+          if (typeof window !== 'undefined' && message.accessToken && message.refreshToken) {
+            localStorage.setItem(config.auth.tokenKeys.accessToken, message.accessToken);
+            localStorage.setItem(config.auth.tokenKeys.refreshToken, message.refreshToken);
+          }
           // Update user state from broadcast
           store.setUser(message.user);
           store.setLoading(false);
+          // Mark as initialized and authenticated
+          useAuthStore.setState({
+            isAuthenticated: true,
+            isInitialized: true,
+            lastFetchTime: Date.now(),
+          });
           // Fetch fresh user data to ensure consistency
           store.fetchCurrentUser(true).catch(() => {
             // Silently fail, user data from broadcast is sufficient

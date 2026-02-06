@@ -4,9 +4,9 @@
  */
 
 type AuthBroadcastMessage = 
-  | { type: 'SIGN_IN'; user: any }
+  | { type: 'SIGN_IN'; user: any; accessToken?: string; refreshToken?: string }
   | { type: 'SIGN_OUT' }
-  | { type: 'SIGN_UP'; user: any }
+  | { type: 'SIGN_UP'; user: any; accessToken?: string; refreshToken?: string }
   | { type: 'TOKEN_REFRESHED' };
 
 class AuthBroadcastChannel {
@@ -46,9 +46,14 @@ class AuthBroadcastChannel {
   /**
    * Broadcast sign in event to other tabs
    */
-  broadcastSignIn(user: any): void {
+  broadcastSignIn(user: any, accessToken?: string, refreshToken?: string): void {
     if (!this.isInitialized || !this.channel) return;
-    this.channel.postMessage({ type: 'SIGN_IN', user } as AuthBroadcastMessage);
+    this.channel.postMessage({ 
+      type: 'SIGN_IN', 
+      user,
+      accessToken,
+      refreshToken 
+    } as AuthBroadcastMessage);
   }
 
   /**
@@ -62,9 +67,14 @@ class AuthBroadcastChannel {
   /**
    * Broadcast sign up event to other tabs
    */
-  broadcastSignUp(user: any): void {
+  broadcastSignUp(user: any, accessToken?: string, refreshToken?: string): void {
     if (!this.isInitialized || !this.channel) return;
-    this.channel.postMessage({ type: 'SIGN_UP', user } as AuthBroadcastMessage);
+    this.channel.postMessage({ 
+      type: 'SIGN_UP', 
+      user,
+      accessToken,
+      refreshToken 
+    } as AuthBroadcastMessage);
   }
 
   /**
