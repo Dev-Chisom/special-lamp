@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Mail, Copy, RefreshCw, Sparkles, Download } from "lucide-react"
+import { Mail, Copy, RefreshCw, Sparkles, Download, Loader2 } from "lucide-react"
 import { coverLetterService } from "@/services/cover-letter.service"
 import { resumeService, type CombinedResumeItem } from "@/services/resume.service"
 import { toast } from "sonner"
@@ -249,12 +249,21 @@ export function CoverLetterInterface() {
 
                 <Button
                   onClick={handleGenerate}
-                  disabled={!jobDescription || !companyName || !roleName || !selectedResumeId || resumes.length === 0}
+                  disabled={!jobDescription || !companyName || !roleName || !selectedResumeId || resumes.length === 0 || generateState === "generating"}
                   className="w-full"
                   size="lg"
                 >
-                  <Sparkles className="mr-2 h-5 w-5" />
-                  Generate Cover Letter
+                  {generateState === "generating" ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-5 w-5" />
+                      Generate Cover Letter
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>

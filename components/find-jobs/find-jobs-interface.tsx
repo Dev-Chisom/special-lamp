@@ -42,6 +42,7 @@ import {
   Target,
   TrendingUp,
   MapPin as LocationIcon,
+  Loader2,
 } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import {
@@ -73,6 +74,7 @@ export function FindJobsInterface() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalJobs, setTotalJobs] = useState(0)
+  const [isTracking, setIsTracking] = useState(false)
   const pageSize = 12
 
   // Debounce search
@@ -303,6 +305,7 @@ export function FindJobsInterface() {
   const handleTrack = async () => {
     if (!selectedJob) return
 
+    setIsTracking(true)
     try {
       // Use the helper method which handles full description and salary
       const createRequest = jobService.ingestedJobToCreateRequest(selectedJob)
@@ -312,6 +315,8 @@ export function FindJobsInterface() {
     } catch (error: any) {
       console.error("Failed to save job:", error)
       toast.error(error?.message || "Failed to save job. Please try again.")
+    } finally {
+      setIsTracking(false)
     }
   }
 
@@ -595,8 +600,15 @@ export function FindJobsInterface() {
                   <Button onClick={handleScan} variant="outline" className="flex-1">
                     Scan
                   </Button>
-                  <Button onClick={handleTrack} variant="outline" className="flex-1">
-                    Track
+                  <Button onClick={handleTrack} variant="outline" className="flex-1" disabled={isTracking}>
+                    {isTracking ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Tracking...
+                      </>
+                    ) : (
+                      "Track"
+                    )}
                   </Button>
                   <Button onClick={handleApply} variant="outline" className="flex-1">
                     Apply
@@ -896,8 +908,15 @@ export function FindJobsInterface() {
                     <Button onClick={handleScan} variant="outline" className="flex-1">
                       Scan
                     </Button>
-                    <Button onClick={handleTrack} variant="outline" className="flex-1">
-                      Track
+                    <Button onClick={handleTrack} variant="outline" className="flex-1" disabled={isTracking}>
+                      {isTracking ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Tracking...
+                        </>
+                      ) : (
+                        "Track"
+                      )}
                     </Button>
                     <Button onClick={handleApply} variant="outline" className="flex-1">
                       Apply

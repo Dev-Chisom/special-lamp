@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Wand2, Copy, RefreshCw, CheckCircle2, AlertCircle, Sparkles, TrendingUp } from "lucide-react"
+import { Wand2, Copy, RefreshCw, CheckCircle2, AlertCircle, Sparkles, TrendingUp, Loader2 } from "lucide-react"
 import { rewriteService } from "@/services/rewrite.service"
 import { toast } from "sonner"
 
@@ -163,9 +163,18 @@ export function RewriteInterface() {
                     </p>
                   </div>
 
-                  <Button onClick={handleRewrite} disabled={!originalText} className="w-full" size="lg">
-                    <Sparkles className="mr-2 h-5 w-5" />
-                    Rewrite with AI
+                  <Button onClick={handleRewrite} disabled={!originalText || rewriteState === "generating"} className="w-full" size="lg">
+                    {rewriteState === "generating" ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Rewriting...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="mr-2 h-5 w-5" />
+                        Rewrite with AI
+                      </>
+                    )}
                   </Button>
                 </CardContent>
               </Card>
