@@ -217,16 +217,28 @@ export function useApplicationStatus(options: UseApplicationStatusOptions) {
 
   /**
    * Manual refresh function
-   * Only works if not already polling (to prevent overlapping)
+   * Restarts polling even if it was stopped due to an error
    */
   const refresh = useCallback(() => {
     if (isRequestInFlightRef.current) {
       return // Don't refresh if request is in flight
     }
     
-    if (applicationId && isPollingRef.current) {
-      fetchStatus()
+    if (!applicationId) {
+      return
     }
+    
+    // Clear any existing error
+    setError(null)
+    
+    // Restart polling if it was stopped
+    if (!isPollingRef.current) {
+      isPollingRef.current = true
+      startTimeRef.current = Date.now() // Reset timeout timer
+    }
+    
+    // Fetch status immediately
+    fetchStatus()
   }, [applicationId, fetchStatus])
 
   /**

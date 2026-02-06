@@ -26,6 +26,7 @@ export function ApplyFlow({ job, onCancel }: ApplyFlowProps) {
   const [selectedResume, setSelectedResume] = useState<Resume | null>(null)
   const [tailoredResume, setTailoredResume] = useState<Resume | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isStartingApplication, setIsStartingApplication] = useState(false)
   const hasCheckedResumesRef = useRef(false)
 
   useEffect(() => {
@@ -98,6 +99,7 @@ export function ApplyFlow({ job, onCancel }: ApplyFlowProps) {
       return
     }
 
+    setIsStartingApplication(true)
     try {
       const jobId = (job as IngestedJobResponse).id || job.id
       const response = await applicationService.startApplication({
@@ -115,10 +117,12 @@ export function ApplyFlow({ job, onCancel }: ApplyFlowProps) {
         toast.success("Application started! Redirecting to application progress...")
       } else {
         toast.error("Failed to start application: Application ID not found")
+        setIsStartingApplication(false)
       }
     } catch (error: any) {
       console.error("Failed to start application:", error)
       toast.error(error?.message || "Failed to start application. Please try again.")
+      setIsStartingApplication(false)
     }
   }
 
@@ -161,6 +165,7 @@ export function ApplyFlow({ job, onCancel }: ApplyFlowProps) {
           job={job}
           onConfirm={handleConfirm}
           onCancel={onCancel}
+          isLoading={isStartingApplication}
         />
       )}
     </>

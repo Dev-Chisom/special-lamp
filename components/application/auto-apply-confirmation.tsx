@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertTriangle, FileText, Building2, Briefcase } from "lucide-react"
+import { AlertTriangle, FileText, Building2, Briefcase, Loader2 } from "lucide-react"
 import type { Resume } from "@/services/resume.service"
 import { formatSalary } from "@/lib/job-utils"
 import type { IngestedJobResponse } from "@/services/job.service"
@@ -24,6 +24,7 @@ interface AutoApplyConfirmationProps {
   job: any
   onConfirm: (consentText: string) => void
   onCancel: () => void
+  isLoading?: boolean
 }
 
 export function AutoApplyConfirmation({
@@ -31,6 +32,7 @@ export function AutoApplyConfirmation({
   job,
   onConfirm,
   onCancel,
+  isLoading = false,
 }: AutoApplyConfirmationProps) {
   const [consent, setConsent] = useState(false)
   const [consentText, setConsentText] = useState("")
@@ -153,14 +155,25 @@ export function AutoApplyConfirmation({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel}>
+          <Button 
+            variant="outline" 
+            onClick={onCancel}
+            disabled={isLoading}
+          >
             Cancel
           </Button>
           <Button
             onClick={handleConfirm}
-            disabled={!consent}
+            disabled={!consent || isLoading}
           >
-            Start Auto-Apply
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Starting Application...
+              </>
+            ) : (
+              "Start Auto-Apply"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
