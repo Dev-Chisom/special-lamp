@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,6 +20,14 @@ import {
   AlertDescription,
 } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
 import { toast } from "sonner"
 import {
   AlertCircle,
@@ -59,6 +67,10 @@ export function AutoApplyPreferences() {
   const [recentJobs, setRecentJobs] = useState<AutoApplyPreferencesResponse['recent_auto_applied_jobs']>([])
   const [stats, setStats] = useState<AutoApplyPreferencesResponse['stats'] | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [recentJobsPage, setRecentJobsPage] = useState(1)
+  const [recentJobsTotal, setRecentJobsTotal] = useState(0)
+  const [isLoadingRecentJobs, setIsLoadingRecentJobs] = useState(false)
+  const recentJobsPageSize = 10
 
   // Form state
   const [newJobTitle, setNewJobTitle] = useState("")
@@ -80,8 +92,8 @@ export function AutoApplyPreferences() {
       const transformedSkills = stringsToSkills(skillsArray)
       setSkills(transformedSkills)
       setPreferences(response.preferences)
-      setRecentJobs(response.recent_auto_applied_jobs || [])
       setStats(response.stats)
+      // Don't load recent jobs here - use separate paginated endpoint
     } catch (error: any) {
       console.error("Failed to load preferences:", error)
       toast.error(error?.message || "Failed to load preferences")
@@ -91,6 +103,26 @@ export function AutoApplyPreferences() {
       setIsLoading(false)
     }
   }
+
+  const loadRecentJobs = useCallback(async (page: number = 1) => {
+    setIsLoadingRecentJobs(true)
+    try {
+      const offset = (page - 1) * recentJobsPageSize
+      const response = await autoApplyPreferencesService.getRecentJobs({
+        limit: recentJobsPageSize,
+        offset: offset,
+      })
+      setRecentJobs(response.jobs || [])
+      setRecentJobsTotal(response.total || 0)
+    } catch (error: any) {
+      console.error("Failed to load recent jobs:", error)
+      toast.error(error?.message || "Failed to load recent jobs")
+      setRecentJobs([])
+      setRecentJobsTotal(0)
+    } finally {
+      setIsLoadingRecentJobs(false)
+    }
+  }, [recentJobsPageSize])
 
   // Load preferences on mount
   useEffect(() => {
@@ -102,6 +134,11 @@ export function AutoApplyPreferences() {
     hasFetchedPreferencesRef.current = true
     loadPreferences()
   }, [])
+
+  // Load recent jobs on mount and when page changes
+  useEffect(() => {
+    loadRecentJobs(recentJobsPage)
+  }, [recentJobsPage, loadRecentJobs])
 
   const validatePreferences = (): boolean => {
     const newErrors: Record<string, string> = {}
@@ -808,47 +845,114 @@ export function AutoApplyPreferences() {
             </div>
           )}
 
-          {recentJobs.length === 0 ? (
+          {isLoadingRecentJobs ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-20 w-full" />
+              ))}
+            </div>
+          ) : recentJobs.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>No auto-applied jobs yet</p>
               <p className="text-sm">Jobs will appear here once auto-apply is active</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {recentJobs.map((job) => (
-                <div
-                  key={job.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50"
-                >
-                  <div className="flex-1">
-                    <div className="font-medium">{job.job_title}</div>
-                    <div className="text-sm text-muted-foreground">{job.company_name}</div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Applied {new Date(job.applied_at).toLocaleDateString()} • Using {job.resume_version_name}
+            <>
+              <div className="space-y-2">
+                {recentJobs.map((job) => (
+                  <div
+                    key={job.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50"
+                  >
+                    <div className="flex-1">
+                      <div className="font-medium">{job.job_title || "Unknown"}</div>
+                      <div className="text-sm text-muted-foreground">{job.company_name || "Unknown"}</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Applied {job.applied_at ? new Date(job.applied_at).toLocaleDateString() : "Invalid Date"} • Using {job.resume_version_name}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <Badge
-                        variant={
-                          job.confidence_score >= 90
-                            ? 'default'
-                            : job.confidence_score >= 80
-                            ? 'secondary'
-                            : 'outline'
-                        }
-                      >
-                        {job.confidence_score}% match
-                      </Badge>
-                      <div className="text-xs text-muted-foreground mt-1 capitalize">
-                        {job.status}
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <Badge
+                          variant={
+                            job.confidence_score >= 90
+                              ? 'default'
+                              : job.confidence_score >= 80
+                              ? 'secondary'
+                              : 'outline'
+                          }
+                        >
+                          {job.confidence_score}% match
+                        </Badge>
+                        <div className="text-xs text-muted-foreground mt-1 capitalize">
+                          {job.status}
+                        </div>
                       </div>
                     </div>
                   </div>
+                ))}
+              </div>
+              {Math.ceil(recentJobsTotal / recentJobsPageSize) > 1 && (
+                <div className="mt-6 pt-4 border-t">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            if (recentJobsPage > 1) {
+                              setRecentJobsPage(recentJobsPage - 1)
+                            }
+                          }}
+                          className={recentJobsPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                        />
+                      </PaginationItem>
+                      {Array.from({ length: Math.min(Math.ceil(recentJobsTotal / recentJobsPageSize), 7) }, (_, i) => {
+                        const totalPages = Math.ceil(recentJobsTotal / recentJobsPageSize)
+                        let page: number
+                        if (totalPages <= 7) {
+                          page = i + 1
+                        } else if (recentJobsPage <= 4) {
+                          page = i + 1
+                        } else if (recentJobsPage >= totalPages - 3) {
+                          page = totalPages - 6 + i
+                        } else {
+                          page = recentJobsPage - 3 + i
+                        }
+                        return (
+                          <PaginationItem key={page}>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                setRecentJobsPage(page)
+                              }}
+                              isActive={recentJobsPage === page}
+                            >
+                              {page}
+                            </PaginationLink>
+                          </PaginationItem>
+                        )
+                      })}
+                      <PaginationItem>
+                        <PaginationNext
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            if (recentJobsPage < Math.ceil(recentJobsTotal / recentJobsPageSize)) {
+                              setRecentJobsPage(recentJobsPage + 1)
+                            }
+                          }}
+                          className={recentJobsPage >= Math.ceil(recentJobsTotal / recentJobsPageSize) ? "pointer-events-none opacity-50" : ""}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

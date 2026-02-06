@@ -111,17 +111,10 @@ export function FindJobsInterface() {
           page_size: pageSize,
         }
 
-        // Handle remote/hybrid/onsite filter
-        // Note: Backend might not support location_type filtering yet, so we'll filter client-side for hybrid/onsite
         if (remoteOption === "remote") {
           params.remote_only = true
-        } else if (remoteOption === "all") {
-          // Don't set remote_only - show all
-        } else {
-          // For hybrid/onsite, we can't filter on backend yet, so we'll need to do client-side
-          // For now, just don't set remote_only (show all, then filter client-side)
-          // TODO: Add location_type parameter to backend API
         }
+        // TODO: Add location_type parameter to backend API for hybrid/onsite filtering
 
         // Add date range filter
         if (dateRange !== "any") {
@@ -231,7 +224,6 @@ export function FindJobsInterface() {
       const trimmed = paragraph.trim()
       if (!trimmed) return null
       
-      // Check if paragraph starts with bullet points or numbered lists
       if (trimmed.startsWith('•') || trimmed.startsWith('-') || trimmed.startsWith('*') || /^\d+\./.test(trimmed)) {
         const lines = trimmed.split('\n').filter(line => line.trim())
         return (
@@ -244,12 +236,9 @@ export function FindJobsInterface() {
         )
       }
       
-      // Check if it's a heading (all caps or starts with specific patterns)
       if (trimmed === trimmed.toUpperCase() && trimmed.length < 100 && !trimmed.includes('.')) {
         return <h4 key={index} className="font-semibold text-base mb-3 mt-4">{trimmed}</h4>
       }
-      
-      // Regular paragraph
   return (
         <p key={index} className="mb-4">
           {paragraph.split('\n').map((line, lineIndex, arr) => (
@@ -263,12 +252,10 @@ export function FindJobsInterface() {
     })
   }
 
-  // Fetch full job details when a job is selected
   useEffect(() => {
     const fetchFullJobDetails = async () => {
       if (!selectedJob) return
 
-      // If we already have the full description, no need to fetch
       if (selectedJob.job_description && selectedJob.job_description.length > 500) {
         return
       }
@@ -276,16 +263,13 @@ export function FindJobsInterface() {
       setIsLoadingJobDetails(true)
       try {
         const fullJobDetails = await jobService.getJobDetails(selectedJob.id)
-        // Merge full details with existing job data
         setSelectedJob({
           ...selectedJob,
           ...fullJobDetails,
-          // Ensure we use the full description
-          job_description: fullJobDetails.job_description || selectedJob.job_description,
+          job_description: fullJobDetails.job_description || selectedJob.job_description || selectedJob.description_snippet || '',
         })
       } catch (error: any) {
         console.error("Failed to fetch full job details:", error)
-        // Don't show error toast - just use what we have
       } finally {
         setIsLoadingJobDetails(false)
       }
@@ -296,7 +280,6 @@ export function FindJobsInterface() {
 
   const handleScan = () => {
     if (selectedJob) {
-      // Navigate to scan page with job context - use full description
       const jobDescription = selectedJob.job_description || selectedJob.description_snippet || ""
       router.push(`/dashboard/scan?jobId=${selectedJob.id}&jobDescription=${encodeURIComponent(jobDescription)}`)
     }
@@ -307,7 +290,6 @@ export function FindJobsInterface() {
 
     setIsTracking(true)
     try {
-      // Use the helper method which handles full description and salary
       const createRequest = jobService.ingestedJobToCreateRequest(selectedJob)
 
       await jobService.saveJob(createRequest)
@@ -420,15 +402,15 @@ export function FindJobsInterface() {
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-full sm:w-[150px]">
                 <ArrowUpDown className="h-4 w-4 mr-2" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
                 <SelectItem value="relevance">Relevance</SelectItem>
-                <SelectItem value="recent">Most Recent</SelectItem>
-                <SelectItem value="salary">Highest Salary</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            <SelectItem value="recent">Most Recent</SelectItem>
+            <SelectItem value="salary">Highest Salary</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Job Listings */}
           <ScrollArea className="flex-1 min-h-0">
@@ -563,7 +545,7 @@ export function FindJobsInterface() {
         <div className="hidden xl:flex w-[500px] min-w-[500px] border-l bg-background flex flex-col h-full overflow-hidden">
           {selectedJob ? (
             <ScrollArea className="flex-1">
-              <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6">
               {/* Job Header */}
               <div>
                 <h2 className="text-xl font-bold mb-2">{selectedJob.job_title}</h2>
@@ -626,9 +608,7 @@ export function FindJobsInterface() {
                 )}
               </div>
 
-              {/* Job Details Section */}
               <div className="space-y-6">
-                {/* Salary Information - Already shown in header, but keep for mobile view consistency */}
 
                 {/* Match Score Breakdown */}
                 {(selectedJob.match_score !== undefined || 
@@ -830,8 +810,7 @@ export function FindJobsInterface() {
                   </div>
                 )}
 
-                {/* Job Description - Hidden for now */}
-                {/* <div className="space-y-4">
+                <div className="space-y-4">
                   <h3 className="font-semibold text-lg">Job Description</h3>
                   {isLoadingJobDetails ? (
                     <div className="space-y-2">
@@ -841,14 +820,14 @@ export function FindJobsInterface() {
                     </div>
                   ) : (
                     <div className="prose prose-sm max-w-none dark:prose-invert">
-                      <div className="text-sm text-foreground leading-relaxed">
-                        {renderJobDescription(selectedJob.job_description || selectedJob.description_snippet || '')}
+                      <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap break-words">
+                        {renderJobDescription(selectedJob.job_description || '')}
                       </div>
                     </div>
                   )}
-                </div> */}
+                </div>
               </div>
-              </div>
+            </div>
             </ScrollArea>
           ) : (
             <div className="flex-1 flex items-center justify-center p-6 h-full">
@@ -933,11 +912,10 @@ export function FindJobsInterface() {
                   )}
                 </div>
 
-                {/* Job Description - Hidden for now */}
-                {/* <div className="space-y-4">
+                <div className="space-y-4">
                   <h3 className="font-semibold text-base sm:text-lg">Job Description</h3>
                   <div className="prose prose-sm max-w-none dark:prose-invert">
-                    <div className="text-sm text-foreground leading-relaxed">
+                    <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap break-words">
                         {isLoadingJobDetails ? (
                         <div className="space-y-2">
                           <Skeleton className="h-4 w-full" />
@@ -945,11 +923,11 @@ export function FindJobsInterface() {
                           <Skeleton className="h-4 w-3/4" />
                         </div>
                       ) : (
-                        renderJobDescription(selectedJob.job_description || selectedJob.description_snippet || '')
+                        renderJobDescription(selectedJob.job_description || '')
                       )}
                     </div>
                   </div>
-                </div> */}
+                </div>
               </div>
             </SheetContent>
           </Sheet>
