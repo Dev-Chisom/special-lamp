@@ -7,6 +7,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authService } from '@/services/auth.service';
 import { config } from '@/lib/config';
+import { authBroadcast } from '@/lib/auth-broadcast';
 import type { User, SignInRequest, SignUpRequest } from '@/types/auth';
 
 interface AuthState {
@@ -30,6 +31,9 @@ interface AuthState {
 
 // Request deduplication: prevent multiple simultaneous /auth/me calls
 let pendingFetchUserPromise: Promise<void> | null = null;
+
+// Flag to prevent broadcast loops (don't broadcast when we receive a broadcast)
+let isHandlingBroadcast = false;
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -68,6 +72,10 @@ export const useAuthStore = create<AuthState>()(
             error: null,
             lastFetchTime: Date.now(),
           });
+          // Broadcast sign in to other tabs (only if not handling a broadcast)
+          if (!isHandlingBroadcast) {
+            authBroadcast.broadcastSignIn(response.user);
+          }
         } catch (error: any) {
           set({
             user: null,
@@ -90,6 +98,10 @@ export const useAuthStore = create<AuthState>()(
             error: null,
             lastFetchTime: Date.now(),
           });
+          // Broadcast sign up to other tabs (only if not handling a broadcast)
+          if (!isHandlingBroadcast) {
+            authBroadcast.broadcastSignUp(response.user);
+          }
         } catch (error: any) {
           set({
             user: null,
@@ -113,6 +125,10 @@ export const useAuthStore = create<AuthState>()(
             isInitialized: false, // Reset initialization flag on sign out
             lastFetchTime: null,
           });
+          // Broadcast sign out to other tabs (only if not handling a broadcast)
+          if (!isHandlingBroadcast) {
+            authBroadcast.broadcastSignOut();
+          }
         } catch (error: any) {
           set({ error: error.message || 'Sign out failed' });
         }
@@ -272,3 +288,46 @@ export const useAuthStore = create<AuthState>()(
   )
 );
 
+// Initialize broadcast channel listener after store is created
+if (typeof window !== 'undefined') {
+  authBroadcast.subscribe((message) => {
+    const store = useAuthStore.getState();
+    isHandlingBroadcast = true;
+    
+    try {
+      switch (message.type) {
+        case 'SIGN_IN':
+        case 'SIGN_UP':
+          // Update user state from broadcast
+          store.setUser(message.user);
+          store.setLoading(false);
+          // Fetch fresh user data to ensure consistency
+          store.fetchCurrentUser(true).catch(() => {
+            // Silently fail, user data from broadcast is sufficient
+          });
+          break;
+        case 'SIGN_OUT':
+          // Clear auth state
+          store.setUser(null);
+          store.setLoading(false);
+          store.setError(null);
+          // Clear tokens (they should already be cleared by the tab that signed out)
+          if (typeof window !== 'undefined') {
+            authService.signOut();
+          }
+          break;
+        case 'TOKEN_REFRESHED':
+          // Refresh user data when token is refreshed in another tab
+          store.fetchCurrentUser(true).catch(() => {
+            // Silently fail
+          });
+          break;
+      }
+    } finally {
+      // Reset flag after a short delay to allow state updates
+      setTimeout(() => {
+        isHandlingBroadcast = false;
+      }, 100);
+    }
+  });
+}

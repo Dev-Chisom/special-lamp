@@ -4,6 +4,7 @@
  */
 
 import { config } from '@/lib/config';
+import { authBroadcast } from '@/lib/auth-broadcast';
 import type { AuthTokens } from '@/types/auth';
 
 export interface ApiError {
@@ -132,6 +133,9 @@ class ApiClient {
         access_token: data.access_token,
         refresh_token: refreshToken, // Keep the same refresh token
       });
+
+      // Broadcast token refresh to other tabs
+      authBroadcast.broadcastTokenRefresh();
 
       return data.access_token;
     } catch (error) {
