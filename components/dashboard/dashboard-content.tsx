@@ -161,9 +161,8 @@ export function DashboardContent() {
   }, [activeTab])
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-        {/* Left Sidebar */}
+    <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 md:py-8 max-w-7xl">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 sm:gap-6">
         <div className="xl:col-span-4 space-y-4 sm:space-y-6 order-2 xl:order-1">
           {/* ATS Score Card */}
           <Card className="relative overflow-hidden">
@@ -308,47 +307,45 @@ export function DashboardContent() {
           </Card>
         </div>
 
-        {/* Main Content Area */}
-        <div className="xl:col-span-8 space-y-6 order-1 xl:order-2">
+        <div className="xl:col-span-8 space-y-4 sm:space-y-6 order-1 xl:order-2">
           {/* Application Analytics Card */}
           <Card className="relative overflow-hidden">
             <div className="absolute inset-0 opacity-5">
               <div className="absolute inset-0 bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] bg-[size:14px_24px]" />
             </div>
-            <CardContent className="relative p-8 sm:p-8">
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <CardContent className="relative p-4 sm:p-6 md:p-8">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 {applicationStats && applicationStats.total > 0 ? (
                   <>
                     <div className="flex flex-col">
-                      <div className="text-2xl font-bold text-primary">
+                      <div className="text-xl sm:text-2xl font-bold text-primary">
                         {applicationStats.total}
                       </div>
-                      <div className="text-xs sm:text-sm text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         Total Applications
                       </div>
                     </div>
                     <div className="flex flex-col">
-                      <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                      <div className="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                         {applicationStats.successful}
                       </div>
-                      <div className="text-xs sm:text-sm text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         Successful
                       </div>
                     </div>
                     <div className="flex flex-col">
-                      <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                      <div className="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-400">
                         {applicationStats.failed}
                       </div>
-                      <div className="text-xs sm:text-sm text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         Failed
                       </div>
                     </div>
                     <div className="flex flex-col">
-                      <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                      <div className="text-xl sm:text-2xl font-bold text-amber-600 dark:text-amber-400">
                         {applicationStats.pending}
                       </div>
-                      <div className="text-xs sm:text-sm text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         Pending
                       </div>
                     </div>
@@ -378,15 +375,15 @@ export function DashboardContent() {
                 )}
               </div>
               
-              <div className="flex gap-3 sm:flex-row mt-4">
-                <Link href="/dashboard/find-jobs" className="flex-1 sm:flex-none">
-                  <Button size="lg" className="w-full">
+              <div className="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-6">
+                <Link href="/dashboard/find-jobs" className="flex-1">
+                  <Button size="lg" className="w-full text-sm sm:text-base">
                     <Sparkles className="mr-2 h-4 w-4" />
                     View Recommendations
                   </Button>
                 </Link>
-                <Link href="/dashboard/find-jobs" className="flex-1 sm:flex-none">
-                  <Button size="lg" variant="outline" className="w-full bg-transparent">
+                <Link href="/dashboard/find-jobs" className="flex-1">
+                  <Button size="lg" variant="outline" className="w-full bg-transparent text-sm sm:text-base">
                     Browse Jobs
                   </Button>
                 </Link>
@@ -395,18 +392,18 @@ export function DashboardContent() {
           </Card>
 
           {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
-              <TabsTrigger value="recommended" className="text-xs sm:text-sm">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
+              <TabsTrigger value="recommended" className="text-xs sm:text-sm py-2 sm:py-2.5">
                 Recommended
               </TabsTrigger>
-              <TabsTrigger value="saved" className="text-xs sm:text-sm">
+              <TabsTrigger value="saved" className="text-xs sm:text-sm py-2 sm:py-2.5">
                 Saved Jobs
               </TabsTrigger>
-              <TabsTrigger value="applied" className="text-xs sm:text-sm">
+              <TabsTrigger value="applied" className="text-xs sm:text-sm py-2 sm:py-2.5">
                 Applied
               </TabsTrigger>
-              <TabsTrigger value="resumes" className="text-xs sm:text-sm">
+              <TabsTrigger value="resumes" className="text-xs sm:text-sm py-2 sm:py-2.5">
                 Resumes
               </TabsTrigger>
             </TabsList>
