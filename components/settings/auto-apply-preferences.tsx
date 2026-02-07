@@ -179,6 +179,57 @@ export function AutoApplyPreferences() {
     return Object.keys(newErrors).length === 0
   }
 
+  const cleanPreferencesForBackend = (prefs: any): Partial<AutoApplyPreferences> => {
+    const cleaned: any = {}
+    
+    // Required fields - always include
+    if (prefs.status !== undefined && prefs.status !== null) cleaned.status = prefs.status
+    if (prefs.require_review_before_submission !== undefined) cleaned.require_review_before_submission = prefs.require_review_before_submission
+    
+    // Transform UI format (objects) to backend format (strings) for job titles
+    if (Array.isArray(prefs.preferred_job_titles)) {
+      cleaned.preferred_job_titles = prefs.preferred_job_titles.every((item: any) => typeof item === 'string')
+        ? prefs.preferred_job_titles
+        : jobTitlesToStrings(prefs.preferred_job_titles)
+    } else {
+      cleaned.preferred_job_titles = []
+    }
+    
+    // Transform UI format (objects) to backend format (strings) for locations
+    if (Array.isArray(prefs.preferred_locations)) {
+      cleaned.preferred_locations = prefs.preferred_locations.every((item: any) => typeof item === 'string')
+        ? prefs.preferred_locations
+        : locationsToStrings(prefs.preferred_locations)
+    } else {
+      cleaned.preferred_locations = []
+    }
+    
+    // Arrays - ensure they're arrays, not null
+    cleaned.job_types = Array.isArray(prefs.job_types) ? prefs.job_types : []
+    cleaned.employment_types = Array.isArray(prefs.employment_types) ? prefs.employment_types : []
+    cleaned.experience_levels = Array.isArray(prefs.experience_levels) ? prefs.experience_levels : []
+    cleaned.skills = Array.isArray(prefs.skills) ? prefs.skills : []
+    
+    // Optional number fields - only include if not null/undefined
+    if (prefs.salary_min !== undefined && prefs.salary_min !== null) cleaned.salary_min = prefs.salary_min
+    if (prefs.salary_max !== undefined && prefs.salary_max !== null) cleaned.salary_max = prefs.salary_max
+    
+    // Required fields with defaults
+    if (prefs.salary_currency !== undefined && prefs.salary_currency !== null) cleaned.salary_currency = prefs.salary_currency
+    if (prefs.skills_required !== undefined) cleaned.skills_required = prefs.skills_required
+    if (prefs.match_confidence_threshold !== undefined && prefs.match_confidence_threshold !== null) {
+      cleaned.match_confidence_threshold = prefs.match_confidence_threshold
+    }
+    if (prefs.max_applications_per_day !== undefined && prefs.max_applications_per_day !== null) {
+      cleaned.max_applications_per_day = prefs.max_applications_per_day
+    }
+    if (prefs.max_applications_per_week !== undefined && prefs.max_applications_per_week !== null) {
+      cleaned.max_applications_per_week = prefs.max_applications_per_week
+    }
+    
+    return cleaned
+  }
+
   const handleSave = async () => {
     if (!preferences) return
 
@@ -193,10 +244,14 @@ export function AutoApplyPreferences() {
 
     try {
       // Transform skills back to backend format (string[]) before saving
-      const preferencesToSave = {
+      const preferencesWithSkills = {
         ...preferences,
         skills: skillsToStrings(skills),
       }
+      
+      // Clean preferences to remove null values and ensure proper types
+      const preferencesToSave = cleanPreferencesForBackend(preferencesWithSkills)
+      
       const updated = await autoApplyPreferencesService.updatePreferences(preferencesToSave)
       
       // Check if updated response is valid
