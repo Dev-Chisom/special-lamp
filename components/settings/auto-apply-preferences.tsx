@@ -182,9 +182,8 @@ export function AutoApplyPreferences() {
   const cleanPreferencesForBackend = (prefs: any): Partial<AutoApplyPreferences> => {
     const cleaned: any = {}
     
-    // Required fields - always include
-    if (prefs.status !== undefined && prefs.status !== null) cleaned.status = prefs.status
-    if (prefs.require_review_before_submission !== undefined) cleaned.require_review_before_submission = prefs.require_review_before_submission
+    // IMPORTANT: Do NOT include read-only fields (id, user_id, status, created_at, updated_at)
+    // The backend will strip these out, but we should not send them in the first place
     
     // Transform UI format (objects) to backend format (strings) for job titles
     if (Array.isArray(prefs.preferred_job_titles)) {
@@ -211,12 +210,20 @@ export function AutoApplyPreferences() {
     cleaned.skills = Array.isArray(prefs.skills) ? prefs.skills : []
     
     // Optional number fields - only include if not null/undefined
-    if (prefs.salary_min !== undefined && prefs.salary_min !== null) cleaned.salary_min = prefs.salary_min
-    if (prefs.salary_max !== undefined && prefs.salary_max !== null) cleaned.salary_max = prefs.salary_max
+    if (prefs.salary_min !== undefined && prefs.salary_min !== null) {
+      cleaned.salary_min = prefs.salary_min
+    }
+    if (prefs.salary_max !== undefined && prefs.salary_max !== null) {
+      cleaned.salary_max = prefs.salary_max
+    }
     
     // Required fields with defaults
-    if (prefs.salary_currency !== undefined && prefs.salary_currency !== null) cleaned.salary_currency = prefs.salary_currency
-    if (prefs.skills_required !== undefined) cleaned.skills_required = prefs.skills_required
+    if (prefs.salary_currency !== undefined && prefs.salary_currency !== null) {
+      cleaned.salary_currency = prefs.salary_currency
+    }
+    if (prefs.skills_required !== undefined) {
+      cleaned.skills_required = prefs.skills_required
+    }
     if (prefs.match_confidence_threshold !== undefined && prefs.match_confidence_threshold !== null) {
       cleaned.match_confidence_threshold = prefs.match_confidence_threshold
     }
@@ -225,6 +232,9 @@ export function AutoApplyPreferences() {
     }
     if (prefs.max_applications_per_week !== undefined && prefs.max_applications_per_week !== null) {
       cleaned.max_applications_per_week = prefs.max_applications_per_week
+    }
+    if (prefs.require_review_before_submission !== undefined) {
+      cleaned.require_review_before_submission = prefs.require_review_before_submission
     }
     
     return cleaned
