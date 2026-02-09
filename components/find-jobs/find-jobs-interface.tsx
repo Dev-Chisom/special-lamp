@@ -57,7 +57,29 @@ import { jobService, type IngestedJobResponse } from "@/services/job.service"
 import { mapIngestedJobToListing } from "@/components/job-tracker/utils"
 import type { JobListing } from "@/components/job-tracker/types"
 import { formatSalary } from "@/lib/job-utils"
+import type { SourceType } from "@/services/job.service"
 
+// SourceTypeBadge component for displaying job source information
+function SourceTypeBadge({ 
+  sourceType, 
+  jobBoardUrl, 
+  companyName 
+}: { 
+  sourceType?: SourceType
+  jobBoardUrl?: string | null
+  companyName?: string
+}) {
+  if (sourceType !== 'company_job_board') {
+    return null
+  }
+
+  return (
+    <Badge variant="secondary" className="bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20 flex items-center gap-1">
+      <Building2 className="h-3 w-3" />
+      <span className="text-xs">Company Board</span>
+    </Badge>
+  )
+}
 
 export function FindJobsInterface() {
   const router = useRouter()
