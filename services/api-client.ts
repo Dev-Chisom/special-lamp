@@ -182,9 +182,14 @@ class ApiClient {
     }
 
     // Make initial request
-    let response = await fetch(`${this.baseUrl}${endpoint}`, {
+    // Ensure endpoint starts with / to avoid double slashes
+    const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
+    const url = `${this.baseUrl}${normalizedEndpoint}`
+    
+    let response = await fetch(url, {
       ...fetchOptions,
       headers,
+      credentials: 'include', // Include credentials for CORS
     });
 
     // If 401 and not skipAuth, try to refresh token and retry
