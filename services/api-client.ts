@@ -186,10 +186,23 @@ class ApiClient {
     const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
     const url = `${this.baseUrl}${normalizedEndpoint}`
     
-    let response = await fetch(url, {
-      ...fetchOptions,
-      headers,
-    });
+    let response: Response
+    try {
+      response = await fetch(url, {
+        ...fetchOptions,
+        headers,
+      })
+    } catch (error: any) {
+      // Handle network errors (CORS, connection refused, etc.)
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        throw new ApiClientError(
+          'Network error: Unable to connect to the server. Please check if the backend is running.',
+          0,
+          'Network error'
+        )
+      }
+      throw error
+    }
 
     // If 401 and not skipAuth, try to refresh token and retry
     if (response.status === 401 && !skipAuth) {
