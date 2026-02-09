@@ -118,7 +118,6 @@ class ApiClient {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({
           refresh_token: refreshToken,
         }),
@@ -190,7 +189,6 @@ class ApiClient {
     let response = await fetch(url, {
       ...fetchOptions,
       headers,
-      credentials: 'include', // Include credentials for CORS
     });
 
     // If 401 and not skipAuth, try to refresh token and retry
@@ -204,7 +202,6 @@ class ApiClient {
         response = await fetch(url, {
           ...fetchOptions,
           headers: retryHeaders,
-          credentials: 'include',
         });
         
         // If retry still returns 401, session is invalid - clear tokens and redirect
