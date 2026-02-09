@@ -60,7 +60,7 @@ import { formatSalary } from "@/lib/job-utils"
 import type { SourceType } from "@/services/job.service"
 
 // SourceTypeBadge component for displaying job source information
-function SourceTypeBadge({ 
+const SourceTypeBadge = ({ 
   sourceType, 
   jobBoardUrl, 
   companyName 
@@ -68,7 +68,7 @@ function SourceTypeBadge({
   sourceType?: SourceType
   jobBoardUrl?: string | null
   companyName?: string
-}) {
+}) => {
   if (sourceType !== 'company_job_board') {
     return null
   }
