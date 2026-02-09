@@ -86,6 +86,14 @@ export interface GetJobsParams {
 
 export type EmploymentType = 'full_time' | 'part_time' | 'contract' | 'internship' | 'temporary';
 export type LocationType = 'onsite' | 'remote' | 'hybrid';
+export type SourceType = 'job_board' | 'company_job_board' | 'api' | 'ats_discovery';
+
+export interface ExtractionMetadata {
+  board_type?: string;
+  extractor_used?: string;
+  job_id?: string;
+  department?: string;
+}
 
 export interface IngestedJobResponse {
   id: string;
@@ -124,6 +132,11 @@ export interface IngestedJobResponse {
   experience_match?: number;
   education_match?: number;
   location_match?: number;
+  // Company job board fields
+  source_type?: SourceType;
+  job_board_url?: string;
+  extracted_at?: string;
+  extraction_metadata?: ExtractionMetadata;
 }
 
 export interface PaginatedResponse<T> {

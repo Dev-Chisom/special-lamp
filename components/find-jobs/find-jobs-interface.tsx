@@ -43,6 +43,7 @@ import {
   TrendingUp,
   MapPin as LocationIcon,
   Loader2,
+  Building2,
 } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import {
@@ -447,7 +448,10 @@ export function FindJobsInterface() {
                     }}
                   >
                     <CardContent className="p-4">
-                      <h3 className="font-semibold text-sm mb-1">{job.job_title}</h3>
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <h3 className="font-semibold text-sm flex-1">{job.job_title}</h3>
+                        <SourceTypeBadge sourceType={job.source_type} jobBoardUrl={job.job_board_url} companyName={job.company_name} />
+                      </div>
                       <p className="text-xs text-muted-foreground mb-2">{job.company_name}</p>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                         <MapPin className="h-3 w-3" />
@@ -575,6 +579,31 @@ export function FindJobsInterface() {
                   </div>
                 )}
               </div>
+
+              {/* Source Information */}
+              {selectedJob.source_type === 'company_job_board' && (
+                <div className="space-y-2 mb-4 p-3 bg-blue-500/5 border border-blue-500/20 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <SourceTypeBadge sourceType={selectedJob.source_type} jobBoardUrl={selectedJob.job_board_url} companyName={selectedJob.company_name} />
+                  </div>
+                  {selectedJob.job_board_url && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full sm:w-auto text-xs"
+                      onClick={() => window.open(selectedJob.job_board_url, '_blank')}
+                    >
+                      <ExternalLink className="h-3 w-3 mr-1" />
+                      View all jobs at {selectedJob.company_name}
+                    </Button>
+                  )}
+                  {selectedJob.extraction_metadata?.department && (
+                    <p className="text-xs text-muted-foreground">
+                      Department: {selectedJob.extraction_metadata.department}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Action Buttons */}
               <div className="flex flex-col gap-2">
@@ -878,6 +907,31 @@ export function FindJobsInterface() {
                   <div className="flex items-center gap-2 text-base font-semibold text-primary p-3 bg-primary/10 rounded-lg">
                     <span>💰</span>
                     <span>{formatSalary(selectedJob)}</span>
+                  </div>
+                )}
+
+                {/* Source Information - Mobile View */}
+                {selectedJob.source_type === 'company_job_board' && (
+                  <div className="space-y-2 p-3 bg-blue-500/5 border border-blue-500/20 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <SourceTypeBadge sourceType={selectedJob.source_type} jobBoardUrl={selectedJob.job_board_url} companyName={selectedJob.company_name} />
+                    </div>
+                    {selectedJob.job_board_url && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs"
+                        onClick={() => window.open(selectedJob.job_board_url, '_blank')}
+                      >
+                        <ExternalLink className="h-3 w-3 mr-1" />
+                        View all jobs at {selectedJob.company_name}
+                      </Button>
+                    )}
+                    {selectedJob.extraction_metadata?.department && (
+                      <p className="text-xs text-muted-foreground">
+                        Department: {selectedJob.extraction_metadata.department}
+                      </p>
+                    )}
                   </div>
                 )}
 
