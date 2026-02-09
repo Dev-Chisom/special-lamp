@@ -200,9 +200,10 @@ class ApiClient {
         // Retry request with new token
         const retryHeaders = new Headers(headers);
         retryHeaders.set('Authorization', `Bearer ${newToken}`);
-        response = await fetch(`${this.baseUrl}${endpoint}`, {
+        response = await fetch(url, {
           ...fetchOptions,
           headers: retryHeaders,
+          credentials: 'include',
         });
         
         // If retry still returns 401, session is invalid - clear tokens and redirect
